@@ -20,7 +20,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 
 public class Mandlebrot {
-  private static final int SIZE = 1000;
+  public static final int SIZE = 1000;
   public static final int MAX_VALUE = 1000;
 
   private final String s;
@@ -30,7 +30,7 @@ public class Mandlebrot {
   private final int[][] values;
 
   public Mandlebrot(double aCenter, double bCenter, double size) {
-    this.s = "Center: (" + aCenter + ", " + bCenter + ") width/height: " + size;
+    this.s = "Center: (" + formatDouble(aCenter) + ", " + formatDouble(bCenter) + ") width/height: " + formatDouble(size);
 
     aMin = aCenter - size / 2;
     bMin = bCenter - size / 2;
@@ -40,10 +40,23 @@ public class Mandlebrot {
     calculatePixelValues();
   }
 
-  public Mandlebrot zoom(int x, int y) {
+  private static String formatDouble(double d) {
+    String s = String.format("%f", d);
+    if (s.contains(".")) {
+      while (s.endsWith("0")) {
+        s = s.substring(0, s.length() - 1);
+      }
+      if (s.endsWith(".")) {
+        s = s.substring(0, s.length() - 1);
+      }
+    }
+    return s;
+  }
+
+  public Mandlebrot panZoom(int x, int y, double zoomFactor) {
     double cA = aMin + size * x / SIZE;
-    double cB = bMin + size * (SIZE - 1 - y) / SIZE;
-    return new Mandlebrot(cA, cB, size / 4);
+    double cB = bMin + size * y / SIZE;
+    return new Mandlebrot(cA, cB, size * zoomFactor);
   }
 
   public String toString() {
@@ -60,7 +73,7 @@ public class Mandlebrot {
 
   private int calculatePixelValue(int x, int y) {
     double cA = aMin + size * x / SIZE;
-    double cB = bMin + size * (SIZE - 1 - y) / SIZE;
+    double cB = bMin + size * y / SIZE;
     return calculateValue(cA, cB);
   }
 
