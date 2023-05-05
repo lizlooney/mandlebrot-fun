@@ -27,6 +27,7 @@ import java.awt.GridBagConstraints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
@@ -91,13 +92,12 @@ public class Main {
   private final JPanel mandlebrotPanel = new MandlebrotPanel();
   private final JLabel mandlebrotLabel = new JLabel();
   private final JButton saveFileButton = new JButton("Save image file");
-  private final int[] colorTable;
+  private final ColorTable colorTable = new ColorTable(Mandlebrot.MAX_VALUE);
   private final Deque<Mandlebrot> mStack = new ArrayDeque<>();
   private RenderedImage renderedImage;
   private final List<JComponent> components = new ArrayList<>();
 
   Main() {
-    colorTable = new int[Mandlebrot.MAX_VALUE];
     fillColorTable();
     mStack.addLast(new Mandlebrot(0, 0, 4));
 
@@ -429,7 +429,7 @@ public class Main {
   }
 
   private void fillColorTable() {
-    ColorTable.fill(colorTable,
+    colorTable.fill(
         new ColorTable.Hue(valueOf(hStart), valueOf(hMin), valueOf(hMax), valueOf(hDelta)),
         new ColorTable.Saturation(valueOf(sStart), valueOf(sMin), valueOf(sMax), valueOf(sDelta)),
         new ColorTable.Brightness(valueOf(bStart), valueOf(bMin), valueOf(bMax), valueOf(bDelta)));
@@ -443,8 +443,16 @@ public class Main {
     @Override
     public void paint(Graphics g) {
       Graphics2D g2d = (Graphics2D) g;
-      renderedImage = mStack.peekLast().produceImage(colorTable);
+      renderedImage = produceImage(mStack.peekLast());
       g2d.drawRenderedImage(renderedImage, new AffineTransform());
+    }
+
+    public RenderedImage produceImage(Mandlebrot m) {
+      final BufferedImage bi = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_RGB);
+      m.accept((x, y, value) -> {
+        bi.setRGB(x, y, colorTable.valueToColor(value));
+      });
+      return bi;
     }
   }
 

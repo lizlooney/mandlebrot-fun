@@ -12,8 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+java_library(
+    name = "mandlebrot",
+    srcs = [
+      "org/lizlooney/mandlebrot/Mandlebrot.java",
+    ],
+)
+
 java_binary(
     name = "MandlebrotFun",
+    deps = [
+      ":mandlebrot",
+    ],
     main_class = "org.lizlooney.mandlebrot.Main",
-    srcs = glob(["org/lizlooney/mandlebrot/*.java"]),
+    srcs = [
+      "org/lizlooney/mandlebrot/ColorTable.java",
+      "org/lizlooney/mandlebrot/Main.java",
+    ],
 )
