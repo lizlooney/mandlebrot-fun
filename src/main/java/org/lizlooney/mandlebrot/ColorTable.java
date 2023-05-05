@@ -19,6 +19,32 @@ package org.lizlooney.mandlebrot;
 import java.awt.Color;
 
 public class ColorTable {
+  private final int[] table;
+
+  public ColorTable(int size) {
+    table = new int[size];
+  }
+
+  public void fill(Hue h, Saturation s, Brightness b) {
+    for (int i = 0; i < table.length; i++) {
+      table[i] = Color.HSBtoRGB(h.hue(), s.saturation(), b.brightness());
+      h.next();
+      s.next();
+      b.next();
+    }
+  }
+
+  public int valueToColor(int value) {
+    if (value == 0) {
+      return 0xFFFFFF;
+    }
+    if (value > table.length) {
+      return 0;
+    }
+
+    return table[value - 1];
+  }
+
   static abstract class ColorComponent {
     protected int value;
     private final int min;
@@ -73,15 +99,6 @@ public class ColorTable {
 
     float brightness() {
       return value / 100f;
-    }
-  }
-
-  public static void fill(int[] colorTable, Hue h, Saturation s, Brightness b) {
-    for (int i = 0; i < colorTable.length; i++) {
-      colorTable[i] = Color.HSBtoRGB(h.hue(), s.saturation(), b.brightness());
-      h.next();
-      s.next();
-      b.next();
     }
   }
 }

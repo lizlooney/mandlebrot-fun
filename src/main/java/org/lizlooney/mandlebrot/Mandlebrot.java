@@ -16,9 +16,6 @@
 
 package org.lizlooney.mandlebrot;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-
 public class Mandlebrot {
   public static final int SIZE = 1000;
   public static final int MAX_VALUE = 1000;
@@ -93,25 +90,15 @@ public class Mandlebrot {
     return Integer.MAX_VALUE;
   }
 
-  public RenderedImage produceImage(int[] colorTable) {
-    BufferedImage bi = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_RGB);
-    for (int y = 0; y < SIZE; y++) {
-      for (int x = 0; x < SIZE; x++) {
-        bi.setRGB(x, y, valueToColor(colorTable, values[y][x]));
-      }
-    }
-
-    return bi;
+  public interface Visitor {
+    void visit(int x, int y, int value);
   }
 
-  private static int valueToColor(int[] colorTable, int value) {
-    if (value == 0) {
-      return 0xFFFFFF;
+  public void accept(Visitor visitor) {
+    for (int y = 0; y < SIZE; y++) {
+      for (int x = 0; x < SIZE; x++) {
+        visitor.visit(x, y, values[y][x]);
+      }
     }
-    if (value > colorTable.length) {
-      return 0;
-    }
-
-    return colorTable[value - 1];
   }
 }
