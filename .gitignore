@@ -1,3 +1,9 @@
+bazel-mandlebrot-fun
+bazel-bin
+bazel-out
+bazel-testlogs
+
+
 # Compiled class file
 *.class
 

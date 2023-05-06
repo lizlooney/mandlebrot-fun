@@ -17,22 +17,23 @@
 package org.lizlooney.mandlebrot;
 
 public class Mandlebrot {
-  public static final int SIZE = 1000;
   public static final int MAX_VALUE = 1000;
 
   private final String s;
+  private final int sizeInPixels;
   private final double aMin;
   private final double bMin;
   private final double size;
   private final int[][] values;
 
-  public Mandlebrot(double aCenter, double bCenter, double size) {
+  public Mandlebrot(int sizeInPixels, double aCenter, double bCenter, double size) {
     this.s = "Center: (" + formatDouble(aCenter) + ", " + formatDouble(bCenter) + ") width/height: " + formatDouble(size);
 
+    this.sizeInPixels = sizeInPixels;
     aMin = aCenter - size / 2;
     bMin = bCenter - size / 2;
     this.size = size;
-    values = new int[SIZE][SIZE];
+    values = new int[sizeInPixels][sizeInPixels];
 
     calculatePixelValues();
   }
@@ -51,9 +52,9 @@ public class Mandlebrot {
   }
 
   public Mandlebrot panZoom(int x, int y, double zoomFactor) {
-    double cA = aMin + size * x / SIZE;
-    double cB = bMin + size * y / SIZE;
-    return new Mandlebrot(cA, cB, size * zoomFactor);
+    double cA = aMin + size * x / sizeInPixels;
+    double cB = bMin + size * y / sizeInPixels;
+    return new Mandlebrot(sizeInPixels, cA, cB, size * zoomFactor);
   }
 
   public String toString() {
@@ -61,16 +62,16 @@ public class Mandlebrot {
   }
 
   private void calculatePixelValues() {
-    for (int y = 0; y < SIZE; y++) {
-      for (int x = 0; x < SIZE; x++) {
+    for (int y = 0; y < sizeInPixels; y++) {
+      for (int x = 0; x < sizeInPixels; x++) {
         values[y][x] = calculatePixelValue(x, y);
       }
     }
   }
 
   private int calculatePixelValue(int x, int y) {
-    double cA = aMin + size * x / SIZE;
-    double cB = bMin + size * y / SIZE;
+    double cA = aMin + size * x / sizeInPixels;
+    double cB = bMin + size * y / sizeInPixels;
     return calculateValue(cA, cB);
   }
 
@@ -95,8 +96,8 @@ public class Mandlebrot {
   }
 
   public void accept(Visitor visitor) {
-    for (int y = 0; y < SIZE; y++) {
-      for (int x = 0; x < SIZE; x++) {
+    for (int y = 0; y < sizeInPixels; y++) {
+      for (int x = 0; x < sizeInPixels; x++) {
         visitor.visit(x, y, values[y][x]);
       }
     }
