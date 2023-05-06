@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+package(
+    default_visibility = ["//src:__subpackages__"],
+)
+
 java_library(
     name = "mandlebrot",
     srcs = [
-      "org/lizlooney/mandlebrot/Mandlebrot.java",
+      "Mandlebrot.java",
     ],
 )
 
@@ -26,7 +30,18 @@ java_binary(
     ],
     main_class = "org.lizlooney.mandlebrot.Main",
     srcs = [
-      "org/lizlooney/mandlebrot/ColorTable.java",
-      "org/lizlooney/mandlebrot/Main.java",
+      "ColorTable.java",
+      "Main.java",
     ],
+)
+
+android_library(
+    name = "mandlebrot_activity",
+    srcs = [
+      "ColorTable.java",
+      "Mandlebrot.java",
+      "MandlebrotActivity.java",
+    ],
+    manifest = "AndroidManifest.xml",
+    resource_files = glob(["res/**"]),
 )

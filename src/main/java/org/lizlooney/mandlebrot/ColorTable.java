@@ -16,18 +16,18 @@
 
 package org.lizlooney.mandlebrot;
 
-import java.awt.Color;
-
 public class ColorTable {
   private final int[] table;
+  private final ColorUtils colorUtils;
 
-  public ColorTable(int size) {
+  public ColorTable(int size, ColorUtils colorUtils) {
     table = new int[size];
+    this.colorUtils = colorUtils;
   }
 
   public void fill(Hue h, Saturation s, Brightness b) {
     for (int i = 0; i < table.length; i++) {
-      table[i] = Color.HSBtoRGB(h.hue(), s.saturation(), b.brightness());
+      table[i] = colorUtils.HSBtoRGB(h.hue(), s.saturation(), b.brightness());
       h.next();
       s.next();
       b.next();
@@ -43,6 +43,10 @@ public class ColorTable {
     }
 
     return table[value - 1];
+  }
+
+  interface ColorUtils {
+    int HSBtoRGB(double h, double s, double b);
   }
 
   static abstract class ColorComponent {

@@ -16,7 +16,6 @@
 
 package org.lizlooney.mandlebrot;
 
-import static org.lizlooney.mandlebrot.Mandlebrot.SIZE;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -57,6 +56,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Main {
+  public static final int SIZE = 1000;
   private static final int PAN_CENTER = SIZE / 2;
   private static final int PAN_UP = SIZE / 10;
   private static final int PAN_DOWN = SIZE * 9 / 10;
@@ -92,14 +92,15 @@ public class Main {
   private final JPanel mandlebrotPanel = new MandlebrotPanel();
   private final JLabel mandlebrotLabel = new JLabel();
   private final JButton saveFileButton = new JButton("Save image file");
-  private final ColorTable colorTable = new ColorTable(Mandlebrot.MAX_VALUE);
+  private final ColorTable colorTable;
   private final Deque<Mandlebrot> mStack = new ArrayDeque<>();
   private RenderedImage renderedImage;
   private final List<JComponent> components = new ArrayList<>();
 
   Main() {
+    colorTable = new ColorTable(Mandlebrot.MAX_VALUE, (h, s, b) -> Color.HSBtoRGB((float) h, (float) s, (float) b));
     fillColorTable();
-    mStack.addLast(new Mandlebrot(0, 0, 4));
+    mStack.addLast(new Mandlebrot(SIZE, 0, 0, 4));
 
     components.add(backButton);
     components.add(upLeftButton);
