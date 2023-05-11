@@ -18,4 +18,12 @@ load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
 
 rules_jvm_external_setup()
 
-android_sdk_repository(name = "androidsdk")
+android_sdk_repository(
+    name = "androidsdk",
+    path = "/Users/lizlooney/Library/Android/sdk",
+)
+
+android_ndk_repository(
+    name = "androidndk",
+    path= "/Users/lizlooney/Library/Android/sdk/ndk/21.3.6528147",
+)

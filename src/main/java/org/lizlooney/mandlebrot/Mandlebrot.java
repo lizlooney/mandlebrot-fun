@@ -20,15 +20,21 @@ public class Mandlebrot {
   public static final int MAX_VALUE = 1000;
 
   private final String s;
+  private final boolean useNativeCode;
+  private final int numThreads;
   private final int sizeInPixels;
   private final double aMin;
   private final double bMin;
   private final double size;
+  private final Object valuesLock = new Object();
   private final int[][] values;
 
-  public Mandlebrot(int sizeInPixels, double aCenter, double bCenter, double size) {
+  public Mandlebrot(boolean useNativeCode, int numThreads,
+      int sizeInPixels, double aCenter, double bCenter, double size) {
     this.s = "Center: (" + formatDouble(aCenter) + ", " + formatDouble(bCenter) + ") width/height: " + formatDouble(size);
 
+    this.useNativeCode = useNativeCode;
+    this.numThreads = numThreads;
     this.sizeInPixels = sizeInPixels;
     aMin = aCenter - size / 2;
     bMin = bCenter - size / 2;
@@ -54,7 +60,7 @@ public class Mandlebrot {
   public Mandlebrot panZoom(int x, int y, double zoomFactor) {
     double cA = aMin + size * x / sizeInPixels;
     double cB = bMin + size * y / sizeInPixels;
-    return new Mandlebrot(sizeInPixels, cA, cB, size * zoomFactor);
+    return new Mandlebrot(useNativeCode, numThreads, sizeInPixels, cA, cB, size * zoomFactor);
   }
 
   public String toString() {
@@ -62,11 +68,39 @@ public class Mandlebrot {
   }
 
   private void calculatePixelValues() {
-    for (int y = 0; y < sizeInPixels; y++) {
-      for (int x = 0; x < sizeInPixels; x++) {
-        values[y][x] = calculatePixelValue(x, y);
+    Thread[] threads = new Thread[numThreads];
+    for (int i = 0; i < numThreads; i++) {
+      threads[i] = startThread(i);
+    }
+    for (int i = 0; i < numThreads; i++) {
+      try {
+        threads[i].join();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
       }
     }
+
+  }
+
+  private Thread startThread(final int threadNumber) {
+    Thread thread = new Thread(new Runnable() {
+      public void run() {
+        int i = 0;
+        for (int y = 0; y < sizeInPixels; y++) {
+          for (int x = 0; x < sizeInPixels; x++) {
+            if (numThreads == 1 || i % numThreads == threadNumber) {
+              int value = calculatePixelValue(x, y);
+              synchronized (valuesLock) {
+                values[y][x] = value;
+              }
+            }
+            i++;
+          }
+        }
+      }
+    });
+    thread.start();
+    return thread;
   }
 
   private int calculatePixelValue(int x, int y) {
@@ -76,6 +110,10 @@ public class Mandlebrot {
   }
 
   private int calculateValue(double cA, double cB) {
+    if (useNativeCode) {
+      return calculateValueNative(cA, cB, MAX_VALUE);
+    }
+
     double zA = cA;
     double zB = cB;
     for (int i = 0; i <= MAX_VALUE; i++) {
@@ -91,14 +129,18 @@ public class Mandlebrot {
     return Integer.MAX_VALUE;
   }
 
+  private static native int calculateValueNative(double cA, double cB, int maxValue);
+
   public interface Visitor {
     void visit(int x, int y, int value);
   }
 
   public void accept(Visitor visitor) {
-    for (int y = 0; y < sizeInPixels; y++) {
-      for (int x = 0; x < sizeInPixels; x++) {
-        visitor.visit(x, y, values[y][x]);
+    synchronized (valuesLock) {
+      for (int y = 0; y < sizeInPixels; y++) {
+        for (int x = 0; x < sizeInPixels; x++) {
+          visitor.visit(x, y, values[y][x]);
+        }
       }
     }
   }

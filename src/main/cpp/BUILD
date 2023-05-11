@@ -16,25 +16,13 @@ package(
     default_visibility = ["//src:__subpackages__"],
 )
 
-java_library(
-    name = "mandlebrot",
+cc_library(
+    name = "mandlebrot_jni",
     srcs = [
-      "Mandlebrot.java",
-      "ColorTable.java",
-      "Main.java",
-    ],
-)
-
-android_library(
-    name = "mandlebrot_activity",
-    srcs = [
-      "ColorTable.java",
-      "Mandlebrot.java",
-      "MandlebrotActivity.java",
+        "mandlebrot.cc",
     ],
     deps = [
-        "//src/main/cpp:mandlebrot_jni",
+        "@bazel_tools//tools/jdk:jni",
     ],
-    manifest = "AndroidManifest.xml",
-    resource_files = glob(["res/**"]),
+    alwayslink = 1,
 )

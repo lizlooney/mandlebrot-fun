@@ -12,8 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+java_binary(
+    name = "java_app",
+    runtime_deps = [
+      "//src/main/java/org/lizlooney/mandlebrot:mandlebrot",
+    ],
+    main_class = "org.lizlooney.mandlebrot.Main",
+)
+
 android_binary(
-    name = "app",
+    name = "android_app",
     manifest = "AndroidManifest.xml",
     deps = ["//src/main/java/org/lizlooney/mandlebrot:mandlebrot_activity"],
 )
