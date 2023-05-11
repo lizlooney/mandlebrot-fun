@@ -34,8 +34,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
@@ -97,10 +99,9 @@ public class Main {
   private RenderedImage renderedImage;
   private final List<JComponent> components = new ArrayList<>();
 
-  Main() {
+  Main(boolean useNativeCode) {
     colorTable = new ColorTable(Mandlebrot.MAX_VALUE, (h, s, b) -> Color.HSBtoRGB((float) h, (float) s, (float) b));
     fillColorTable();
-    mStack.addLast(new Mandlebrot(SIZE, 0, 0, 4));
 
     components.add(backButton);
     components.add(upLeftButton);
@@ -127,13 +128,18 @@ public class Main {
     components.add(bDelta);
     components.add(mandlebrotPanel);
     components.add(saveFileButton);
+
+    addListeners();
+    show();
+
+    new StartWorker(useNativeCode).execute();
   }
 
   private void addListeners() {
     backButton.addActionListener(event -> {
       if (mStack.size() > 1) {
         mStack.removeLast();
-        onMandlebrotChanged(true);
+        onMandlebrotChanged();
       }
     });
     upLeftButton.addActionListener(event -> pan(PAN_LEFT, PAN_UP));
@@ -209,6 +215,33 @@ public class Main {
     mandlebrotPanel.repaint(0L, 0, 0, SIZE, SIZE);
   }
 
+  class StartWorker extends SwingWorker<Mandlebrot, Object> {
+    private final boolean useNativeCode;
+    private final List<JComponent> disabledComponents;
+
+    StartWorker(boolean useNativeCode) {
+      this.useNativeCode = useNativeCode;
+      disabledComponents = disableUI();
+    }
+
+    @Override
+    public Mandlebrot doInBackground() {
+      int numThreads = 16;
+      return new Mandlebrot(useNativeCode, numThreads, SIZE, 0, 0, 4);
+    }
+
+    @Override
+    protected void done() {
+      enableUI(disabledComponents);
+      try {
+        mStack.addLast(get());
+        onMandlebrotChanged();
+      } catch (ExecutionException | InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
   class PanZoomWorker extends SwingWorker<Mandlebrot, Object> {
     private final int x;
     private final int y;
@@ -234,38 +267,36 @@ public class Main {
       enableUI(disabledComponents);
       try {
         mStack.addLast(get());
-        onMandlebrotChanged(true);
+        onMandlebrotChanged();
       } catch (ExecutionException | InterruptedException e) {
         e.printStackTrace();
       }
     }
-
-    private List<JComponent> disableUI() {
-      frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-      List<JComponent> disabledComponents = new ArrayList<>();
-      for (JComponent component : components) {
-        if (component.isEnabled()) {
-          component.setEnabled(false);
-          disabledComponents.add(component);
-        }
-      }
-      return disabledComponents;
-    }
-
-    private void enableUI(List<JComponent> disabledComponents) {
-      for (JComponent component  : disabledComponents) {
-        component.setEnabled(true);
-      }
-      frame.setCursor(Cursor.getDefaultCursor());
-    }
   }
 
-  private void onMandlebrotChanged(boolean repaint) {
+  private List<JComponent> disableUI() {
+    frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    List<JComponent> disabledComponents = new ArrayList<>();
+    for (JComponent component : components) {
+      if (component.isEnabled()) {
+        component.setEnabled(false);
+        disabledComponents.add(component);
+      }
+    }
+    return disabledComponents;
+  }
+
+  private void enableUI(List<JComponent> disabledComponents) {
+    for (JComponent component  : disabledComponents) {
+      component.setEnabled(true);
+    }
+    frame.setCursor(Cursor.getDefaultCursor());
+  }
+
+  private void onMandlebrotChanged() {
     backButton.setEnabled(mStack.size() > 1);
     mandlebrotLabel.setText(mStack.peekLast().toString());
-    if (repaint) {
-      mandlebrotPanel.repaint(0L, 0, 0, SIZE, SIZE);
-    }
+    mandlebrotPanel.repaint(0L, 0, 0, SIZE, SIZE);
   }
 
   private void show() {
@@ -300,8 +331,6 @@ public class Main {
     c.fill = GridBagConstraints.NONE;
     gridbag.setConstraints(saveFileButton, c);
     frame.add(saveFileButton);
-
-    onMandlebrotChanged(false);
 
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setSize(1020, 1250);
@@ -443,9 +472,12 @@ public class Main {
   class MandlebrotPanel extends JPanel {
     @Override
     public void paint(Graphics g) {
-      Graphics2D g2d = (Graphics2D) g;
-      renderedImage = produceImage(mStack.peekLast());
-      g2d.drawRenderedImage(renderedImage, new AffineTransform());
+      super.paint(g);
+      if (mStack.size() > 0) {
+        Graphics2D g2d = (Graphics2D) g;
+        renderedImage = produceImage(mStack.peekLast());
+        g2d.drawRenderedImage(renderedImage, new AffineTransform());
+      }
     }
 
     public RenderedImage produceImage(Mandlebrot m) {
@@ -458,12 +490,38 @@ public class Main {
   }
 
   public static void main(String[] args) {
+    Map<String, String> flags = parseFlags(args);
+    final boolean useNativeCode = flags.containsKey("useNativeCode")
+        ? Boolean.parseBoolean(flags.get("useNativeCode"))
+        : false;
+
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        Main main = new Main();
-        main.addListeners();
-        main.show();
+        new Main(useNativeCode);
       }
     });
+  }
+
+  private static Map<String, String> parseFlags(String[] args) {
+    Map<String, String> flags = new HashMap<>();
+    for (String arg : args) {
+      if (arg.startsWith("--")) {
+        int equalsSign = arg.indexOf("=");
+        if (equalsSign > 0) {
+          String key = arg.substring(2, equalsSign);
+          String value = arg.substring(equalsSign + 1);
+          flags.put(key, value);
+        } else {
+          String key = arg.substring(2);
+          Boolean value = true;
+          if (key.startsWith("no")) {
+            value = false;
+            key = arg.substring(2);
+          }
+          flags.put(key, value.toString());
+        }
+      }
+    }
+    return flags;
   }
 }

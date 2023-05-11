@@ -34,6 +34,10 @@ public final class MandlebrotActivity extends Activity {
   private ImageView mandlebrotImageView;
   private int mandlebrotSize;
 
+  static {
+    System.loadLibrary("android_app");
+  }
+
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -52,7 +56,10 @@ public final class MandlebrotActivity extends Activity {
     mandlebrotSize = getSizeForMandlebrot();
 
     new Thread(() -> {
-      mStack.addLast(new Mandlebrot(mandlebrotSize, 0, 0, 4));
+      boolean useNativeCode = true;
+      int numThreads = 16;
+      mStack.addLast(new Mandlebrot(useNativeCode, numThreads,
+          mandlebrotSize, 0, 0, 4));
       Bitmap bitmap = produceBitmap(mStack.peekLast());
       setMandlebrotImage(bitmap);
     }).start();
