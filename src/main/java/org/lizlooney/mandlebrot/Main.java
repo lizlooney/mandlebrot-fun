@@ -58,7 +58,10 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Main {
-  public static final int SIZE = 1000;
+  private static final boolean USE_NATIVE_CODE = false;
+  private static final int NUM_THREADS = 16;
+
+  private static final int SIZE = 1000;
   private static final int PAN_CENTER = SIZE / 2;
   private static final int PAN_UP = SIZE / 10;
   private static final int PAN_DOWN = SIZE * 9 / 10;
@@ -99,7 +102,7 @@ public class Main {
   private RenderedImage renderedImage;
   private final List<JComponent> components = new ArrayList<>();
 
-  Main(boolean useNativeCode) {
+  Main() {
     colorTable = new ColorTable(Mandlebrot.MAX_VALUE, (h, s, b) -> Color.HSBtoRGB((float) h, (float) s, (float) b));
     fillColorTable();
 
@@ -132,7 +135,7 @@ public class Main {
     addListeners();
     show();
 
-    new StartWorker(useNativeCode).execute();
+    new StartWorker().execute();
   }
 
   private void addListeners() {
@@ -216,18 +219,15 @@ public class Main {
   }
 
   class StartWorker extends SwingWorker<Mandlebrot, Object> {
-    private final boolean useNativeCode;
     private final List<JComponent> disabledComponents;
 
-    StartWorker(boolean useNativeCode) {
-      this.useNativeCode = useNativeCode;
+    StartWorker() {
       disabledComponents = disableUI();
     }
 
     @Override
     public Mandlebrot doInBackground() {
-      int numThreads = 16;
-      return new Mandlebrot(useNativeCode, numThreads, SIZE, 0, 0, 4);
+      return new Mandlebrot(USE_NATIVE_CODE, NUM_THREADS, SIZE, 0, 0, 4);
     }
 
     @Override
@@ -490,38 +490,10 @@ public class Main {
   }
 
   public static void main(String[] args) {
-    Map<String, String> flags = parseFlags(args);
-    final boolean useNativeCode = flags.containsKey("useNativeCode")
-        ? Boolean.parseBoolean(flags.get("useNativeCode"))
-        : false;
-
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        new Main(useNativeCode);
+        new Main();
       }
     });
-  }
-
-  private static Map<String, String> parseFlags(String[] args) {
-    Map<String, String> flags = new HashMap<>();
-    for (String arg : args) {
-      if (arg.startsWith("--")) {
-        int equalsSign = arg.indexOf("=");
-        if (equalsSign > 0) {
-          String key = arg.substring(2, equalsSign);
-          String value = arg.substring(equalsSign + 1);
-          flags.put(key, value);
-        } else {
-          String key = arg.substring(2);
-          Boolean value = true;
-          if (key.startsWith("no")) {
-            value = false;
-            key = arg.substring(2);
-          }
-          flags.put(key, value.toString());
-        }
-      }
-    }
-    return flags;
   }
 }

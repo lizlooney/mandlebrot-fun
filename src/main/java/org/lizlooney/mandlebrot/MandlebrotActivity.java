@@ -29,6 +29,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public final class MandlebrotActivity extends Activity {
+  private static final boolean USE_NATIVE_CODE = false;
+  private static final int NUM_THREADS = 16;
+
   private final Deque<Mandlebrot> mStack = new ArrayDeque<>();
   private ColorTable colorTable;
   private ImageView mandlebrotImageView;
@@ -56,9 +59,7 @@ public final class MandlebrotActivity extends Activity {
     mandlebrotSize = getSizeForMandlebrot();
 
     new Thread(() -> {
-      boolean useNativeCode = true;
-      int numThreads = 16;
-      mStack.addLast(new Mandlebrot(useNativeCode, numThreads,
+      mStack.addLast(new Mandlebrot(USE_NATIVE_CODE, NUM_THREADS,
           mandlebrotSize, 0, 0, 4));
       Bitmap bitmap = produceBitmap(mStack.peekLast());
       setMandlebrotImage(bitmap);
