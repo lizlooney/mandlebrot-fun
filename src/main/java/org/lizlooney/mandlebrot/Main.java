@@ -34,10 +34,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
@@ -67,11 +65,12 @@ public class Main {
   private static final int PAN_DOWN = SIZE * 9 / 10;
   private static final int PAN_LEFT = SIZE / 10;
   private static final int PAN_RIGHT = SIZE * 9 / 10;
-  private static final double ZOOM_IN = 0.25;
   private static final double ZOOM_OUT = 4;
+  private static final double ZOOM_IN = 1 / ZOOM_OUT;
 
   private final JFrame frame = new JFrame("Mandlebrot");
-  private final JButton backButton = new JButton("Back");
+  private final JButton backButton = new JButton("<");
+  // TODO(lizlooney): add a forward button.
   private final JButton upLeftButton = new JButton("\u2196");
   private final JButton upButton = new JButton("\u2191");
   private final JButton upRightButton = new JButton("\u2197");
@@ -145,6 +144,9 @@ public class Main {
         onMandlebrotChanged();
       }
     });
+    zoomOutButton.addActionListener(event -> zoom(ZOOM_OUT));
+    zoomInButton.addActionListener(event -> zoom(ZOOM_IN));
+
     upLeftButton.addActionListener(event -> pan(PAN_LEFT, PAN_UP));
     upButton.addActionListener(event -> pan(PAN_CENTER, PAN_UP));
     upRightButton.addActionListener(event -> pan(PAN_RIGHT, PAN_UP));
@@ -153,8 +155,6 @@ public class Main {
     downLeftButton.addActionListener(event -> pan(PAN_LEFT, PAN_DOWN));
     downButton.addActionListener(event -> pan(PAN_CENTER, PAN_DOWN));
     downRightButton.addActionListener(event -> pan(PAN_RIGHT, PAN_DOWN));
-    zoomOutButton.addActionListener(event -> zoom(ZOOM_OUT));
-    zoomInButton.addActionListener(event -> zoom(ZOOM_IN));
 
     hStart.addChangeListener(event -> colorControlPanelChanged());
     hMin.addChangeListener(event -> colorControlPanelChanged());
@@ -205,12 +205,12 @@ public class Main {
     });
   }
 
-  private void pan(int x, int y) {
-    new PanZoomWorker(x, y, 1.0).execute();
-  }
-
   private void zoom(double zoomFactor) {
     new PanZoomWorker(PAN_CENTER, PAN_CENTER, zoomFactor).execute();
+  }
+
+  private void pan(int x, int y) {
+    new PanZoomWorker(x, y, 1.0).execute();
   }
 
   private void colorControlPanelChanged() {
@@ -300,7 +300,8 @@ public class Main {
   }
 
   private void show() {
-    JPanel navigationPanel = createNavigationPanel();
+    JPanel zoomingPanel = createZoomingPanel();
+    JPanel panningPanel = createPanningPanel();
     JPanel colorControlPanel = createColorControlPanel();
 
     GridBagLayout gridbag = new GridBagLayout();
@@ -310,13 +311,18 @@ public class Main {
     c.gridwidth = 1;
     gridbag.setConstraints(backButton, c);
     frame.add(backButton);
-    // Navigation panel
-    gridbag.setConstraints(navigationPanel, c);
-    frame.add(navigationPanel);
+
+    // Zooming panel
+    gridbag.setConstraints(zoomingPanel, c);
+    frame.add(zoomingPanel);
+    // Panning panel
+    gridbag.setConstraints(panningPanel, c);
+    frame.add(panningPanel);
     // Color control panel
     c.gridwidth = GridBagConstraints.REMAINDER;
     gridbag.setConstraints(colorControlPanel, c);
     frame.add(colorControlPanel);
+
     // Mandlebrot panel
     c.fill = GridBagConstraints.BOTH;
     mandlebrotPanel.setPreferredSize(new Dimension(SIZE, SIZE));
@@ -337,44 +343,54 @@ public class Main {
     frame.setVisible(true);
   }
 
-  private JPanel createNavigationPanel() {
-    JPanel navigationPanel = new JPanel();
+  private JPanel createZoomingPanel() {
+    JPanel zoomingPanel = new JPanel();
+    zoomingPanel.setBorder(new TitledBorder("Zooming Panel"));
     GridBagLayout gridbag = new GridBagLayout();
     GridBagConstraints c = new GridBagConstraints();
-    navigationPanel.setLayout(gridbag);
-    c.gridwidth = 1;
-    gridbag.setConstraints(upLeftButton, c);
-    navigationPanel.add(upLeftButton);
-    gridbag.setConstraints(upButton, c);
-    navigationPanel.add(upButton);
-    c.gridwidth = GridBagConstraints.REMAINDER;
-    gridbag.setConstraints(upRightButton, c);
-    navigationPanel.add(upRightButton);
-    c.gridwidth = 1;
-    gridbag.setConstraints(leftButton, c);
-    navigationPanel.add(leftButton);
-    JLabel spacer = new JLabel();
-    gridbag.setConstraints(spacer, c);
-    navigationPanel.add(spacer);
-    c.gridwidth = GridBagConstraints.REMAINDER;
-    gridbag.setConstraints(rightButton, c);
-    navigationPanel.add(rightButton);
-    c.gridwidth = 1;
-    gridbag.setConstraints(downLeftButton, c);
-    navigationPanel.add(downLeftButton);
-    gridbag.setConstraints(downButton, c);
-    navigationPanel.add(downButton);
-    c.gridwidth = GridBagConstraints.REMAINDER;
-    gridbag.setConstraints(downRightButton, c);
-    navigationPanel.add(downRightButton);
-
+    zoomingPanel.setLayout(gridbag);
     c.gridwidth = 1;
     gridbag.setConstraints(zoomOutButton, c);
-    navigationPanel.add(zoomOutButton);
+    zoomingPanel.add(zoomOutButton);
     gridbag.setConstraints(zoomInButton, c);
-    navigationPanel.add(zoomInButton);
+    zoomingPanel.add(zoomInButton);
 
-    return navigationPanel;
+    return zoomingPanel;
+  }
+
+  private JPanel createPanningPanel() {
+    JPanel panningPanel = new JPanel();
+    panningPanel.setBorder(new TitledBorder("Panning Panel"));
+    GridBagLayout gridbag = new GridBagLayout();
+    GridBagConstraints c = new GridBagConstraints();
+    panningPanel.setLayout(gridbag);
+    c.gridwidth = 1;
+    gridbag.setConstraints(upLeftButton, c);
+    panningPanel.add(upLeftButton);
+    gridbag.setConstraints(upButton, c);
+    panningPanel.add(upButton);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    gridbag.setConstraints(upRightButton, c);
+    panningPanel.add(upRightButton);
+    c.gridwidth = 1;
+    gridbag.setConstraints(leftButton, c);
+    panningPanel.add(leftButton);
+    JLabel spacer = new JLabel();
+    gridbag.setConstraints(spacer, c);
+    panningPanel.add(spacer);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    gridbag.setConstraints(rightButton, c);
+    panningPanel.add(rightButton);
+    c.gridwidth = 1;
+    gridbag.setConstraints(downLeftButton, c);
+    panningPanel.add(downLeftButton);
+    gridbag.setConstraints(downButton, c);
+    panningPanel.add(downButton);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    gridbag.setConstraints(downRightButton, c);
+    panningPanel.add(downRightButton);
+
+    return panningPanel;
   }
 
   private JPanel createColorControlPanel() {

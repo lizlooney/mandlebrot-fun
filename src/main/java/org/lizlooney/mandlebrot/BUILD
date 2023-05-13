@@ -34,6 +34,7 @@ android_library(
     ],
     deps = [
         "//src/main/cpp:mandlebrot_jni",
+        "@maven//:androidx_core_core",
     ],
     manifest = "AndroidManifest.xml",
     resource_files = glob(["res/**"]),

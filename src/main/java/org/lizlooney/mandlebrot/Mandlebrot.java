@@ -43,12 +43,7 @@ public class Mandlebrot {
     bMin = bCenter - size / 2;
     values = new int[sizeInPixels * sizeInPixels];
 
-    long startTime = System.currentTimeMillis();
     calculatePixelValues();
-    long endTime = System.currentTimeMillis();
-    System.out.println("HeyLiz - useNativeCode is " + useNativeCode);
-    System.out.println("HeyLiz - numThreads is " + numThreads);
-    System.out.println("HeyLiz - calculatePixelValues took " + ((endTime - startTime) / 1000.0) + " seconds");
   }
 
   private static String formatDouble(double d) {
