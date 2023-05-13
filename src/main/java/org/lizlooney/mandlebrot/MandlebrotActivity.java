@@ -103,16 +103,15 @@ public final class MandlebrotActivity extends Activity {
     final GestureDetectorCompat gestureDetector = new GestureDetectorCompat(this, new SimpleOnGestureListener() {
       @Override
       public boolean onDoubleTapEvent(MotionEvent event) {
-        panZoom((int) event.getX(), (int) event.getY(), ZOOM_IN);
+        if (mandlebrotImageView.isEnabled()) {
+          panZoom((int) event.getX(), (int) event.getY(), ZOOM_IN);
+        }
         return true;
       }
     });
     mandlebrotImageView = new ImageView(this) {
       @Override
       public boolean onTouchEvent(MotionEvent event) {
-        if (! mandlebrotImageView.isEnabled()) {
-          return false;
-        }
         if (gestureDetector.onTouchEvent(event)) {
           return true;
         }
