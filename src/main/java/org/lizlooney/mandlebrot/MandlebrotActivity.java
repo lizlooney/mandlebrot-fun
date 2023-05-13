@@ -27,8 +27,6 @@ import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -104,16 +102,11 @@ public final class MandlebrotActivity extends Activity {
 
     final GestureDetectorCompat gestureDetector = new GestureDetectorCompat(this, new SimpleOnGestureListener() {
       @Override
-      public void onLongPress(MotionEvent event) {
-        panZoom((int) event.getX(), (int) event.getY(), ZOOM_IN);
-      }
-      @Override
-      public boolean onDoubleTap(MotionEvent event) {
+      public boolean onDoubleTapEvent(MotionEvent event) {
         panZoom((int) event.getX(), (int) event.getY(), ZOOM_IN);
         return true;
       }
     });
-    gestureDetector.setIsLongpressEnabled(true);
     mandlebrotImageView = new ImageView(this) {
       @Override
       public boolean onTouchEvent(MotionEvent event) {
@@ -212,17 +205,18 @@ public final class MandlebrotActivity extends Activity {
 
   private void onMandlebrotChanged(final Toast toast) {
     backButton.setEnabled(mStack.size() > 1);
-    mandlebrotLabel.setText(mStack.peekLast().toString());
+    Mandlebrot mandlebrot = mStack.peekLast();
+    mandlebrotLabel.setText(mandlebrot.toString());
 
     final Bitmap bitmap = Bitmap.createBitmap(mandlebrotSize, mandlebrotSize, Bitmap.Config.ARGB_8888);
-    mStack.peekLast().accept((x, y, value) -> {
+    mandlebrot.accept((x, y, value) -> {
       bitmap.setPixel(x, y, 0xFF000000 | colorTable.valueToColor(value));
     });
+    mandlebrotImageView.setImageBitmap(bitmap);
 
     if (toast != null) {
       toast.cancel();
     }
-    mandlebrotImageView.setImageBitmap(bitmap);
   }
 
   private void zoom(double zoomFactor) {
