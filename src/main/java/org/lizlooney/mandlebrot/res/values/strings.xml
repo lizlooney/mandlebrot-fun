@@ -18,4 +18,15 @@
 <resources>
   <string name="app_name">MandlebrotFun</string>
   <string name="Title">Lizzie\'s Fun Mandlebrot Generator</string>
+  <string name="Back">&lt;</string>
+  <string name="ZoomOut">&#x1f50d;-</string>
+  <string name="ZoomIn">&#x1f50d;+</string>
+  <string name="UpLeft">\u2196</string>
+  <string name="Up">\u2191</string>
+  <string name="UpRight">\u2197</string>
+  <string name="Left">\u2190</string>
+  <string name="Right">\u2192</string>
+  <string name="DownLeft">\u2199</string>
+  <string name="Down">\u2193</string>
+  <string name="DownRight">\u2198</string>
 </resources>

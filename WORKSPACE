@@ -27,3 +27,15 @@ android_ndk_repository(
     name = "androidndk",
     path= "/Users/lizlooney/Library/Android/sdk/ndk/21.3.6528147",
 )
+
+load("@rules_jvm_external//:defs.bzl", "maven_install")
+
+maven_install(
+    artifacts = [
+        "androidx.core:core:1.10.1",
+    ],
+    repositories = [
+        "https://maven.google.com",
+        "https://repo1.maven.org/maven2",
+    ],
+)

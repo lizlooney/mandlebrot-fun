@@ -34,10 +34,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
@@ -58,17 +56,21 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Main {
-  public static final int SIZE = 1000;
+  private static final boolean USE_NATIVE_CODE = false;
+  private static final int NUM_THREADS = 16;
+
+  private static final int SIZE = 1000;
   private static final int PAN_CENTER = SIZE / 2;
   private static final int PAN_UP = SIZE / 10;
   private static final int PAN_DOWN = SIZE * 9 / 10;
   private static final int PAN_LEFT = SIZE / 10;
   private static final int PAN_RIGHT = SIZE * 9 / 10;
-  private static final double ZOOM_IN = 0.25;
   private static final double ZOOM_OUT = 4;
+  private static final double ZOOM_IN = 1 / ZOOM_OUT;
 
   private final JFrame frame = new JFrame("Mandlebrot");
-  private final JButton backButton = new JButton("Back");
+  private final JButton backButton = new JButton("<");
+  // TODO(lizlooney): add a forward button.
   private final JButton upLeftButton = new JButton("\u2196");
   private final JButton upButton = new JButton("\u2191");
   private final JButton upRightButton = new JButton("\u2197");
@@ -99,7 +101,7 @@ public class Main {
   private RenderedImage renderedImage;
   private final List<JComponent> components = new ArrayList<>();
 
-  Main(boolean useNativeCode) {
+  Main() {
     colorTable = new ColorTable(Mandlebrot.MAX_VALUE, (h, s, b) -> Color.HSBtoRGB((float) h, (float) s, (float) b));
     fillColorTable();
 
@@ -132,7 +134,7 @@ public class Main {
     addListeners();
     show();
 
-    new StartWorker(useNativeCode).execute();
+    new StartWorker().execute();
   }
 
   private void addListeners() {
@@ -142,6 +144,9 @@ public class Main {
         onMandlebrotChanged();
       }
     });
+    zoomOutButton.addActionListener(event -> zoom(ZOOM_OUT));
+    zoomInButton.addActionListener(event -> zoom(ZOOM_IN));
+
     upLeftButton.addActionListener(event -> pan(PAN_LEFT, PAN_UP));
     upButton.addActionListener(event -> pan(PAN_CENTER, PAN_UP));
     upRightButton.addActionListener(event -> pan(PAN_RIGHT, PAN_UP));
@@ -150,8 +155,6 @@ public class Main {
     downLeftButton.addActionListener(event -> pan(PAN_LEFT, PAN_DOWN));
     downButton.addActionListener(event -> pan(PAN_CENTER, PAN_DOWN));
     downRightButton.addActionListener(event -> pan(PAN_RIGHT, PAN_DOWN));
-    zoomOutButton.addActionListener(event -> zoom(ZOOM_OUT));
-    zoomInButton.addActionListener(event -> zoom(ZOOM_IN));
 
     hStart.addChangeListener(event -> colorControlPanelChanged());
     hMin.addChangeListener(event -> colorControlPanelChanged());
@@ -202,12 +205,12 @@ public class Main {
     });
   }
 
-  private void pan(int x, int y) {
-    new PanZoomWorker(x, y, 1.0).execute();
-  }
-
   private void zoom(double zoomFactor) {
     new PanZoomWorker(PAN_CENTER, PAN_CENTER, zoomFactor).execute();
+  }
+
+  private void pan(int x, int y) {
+    new PanZoomWorker(x, y, 1.0).execute();
   }
 
   private void colorControlPanelChanged() {
@@ -216,18 +219,15 @@ public class Main {
   }
 
   class StartWorker extends SwingWorker<Mandlebrot, Object> {
-    private final boolean useNativeCode;
     private final List<JComponent> disabledComponents;
 
-    StartWorker(boolean useNativeCode) {
-      this.useNativeCode = useNativeCode;
+    StartWorker() {
       disabledComponents = disableUI();
     }
 
     @Override
     public Mandlebrot doInBackground() {
-      int numThreads = 16;
-      return new Mandlebrot(useNativeCode, numThreads, SIZE, 0, 0, 4);
+      return new Mandlebrot(USE_NATIVE_CODE, NUM_THREADS, SIZE, 0, 0, 4);
     }
 
     @Override
@@ -300,7 +300,8 @@ public class Main {
   }
 
   private void show() {
-    JPanel navigationPanel = createNavigationPanel();
+    JPanel zoomingPanel = createZoomingPanel();
+    JPanel panningPanel = createPanningPanel();
     JPanel colorControlPanel = createColorControlPanel();
 
     GridBagLayout gridbag = new GridBagLayout();
@@ -310,13 +311,18 @@ public class Main {
     c.gridwidth = 1;
     gridbag.setConstraints(backButton, c);
     frame.add(backButton);
-    // Navigation panel
-    gridbag.setConstraints(navigationPanel, c);
-    frame.add(navigationPanel);
+
+    // Zooming panel
+    gridbag.setConstraints(zoomingPanel, c);
+    frame.add(zoomingPanel);
+    // Panning panel
+    gridbag.setConstraints(panningPanel, c);
+    frame.add(panningPanel);
     // Color control panel
     c.gridwidth = GridBagConstraints.REMAINDER;
     gridbag.setConstraints(colorControlPanel, c);
     frame.add(colorControlPanel);
+
     // Mandlebrot panel
     c.fill = GridBagConstraints.BOTH;
     mandlebrotPanel.setPreferredSize(new Dimension(SIZE, SIZE));
@@ -337,44 +343,54 @@ public class Main {
     frame.setVisible(true);
   }
 
-  private JPanel createNavigationPanel() {
-    JPanel navigationPanel = new JPanel();
+  private JPanel createZoomingPanel() {
+    JPanel zoomingPanel = new JPanel();
+    zoomingPanel.setBorder(new TitledBorder("Zooming Panel"));
     GridBagLayout gridbag = new GridBagLayout();
     GridBagConstraints c = new GridBagConstraints();
-    navigationPanel.setLayout(gridbag);
-    c.gridwidth = 1;
-    gridbag.setConstraints(upLeftButton, c);
-    navigationPanel.add(upLeftButton);
-    gridbag.setConstraints(upButton, c);
-    navigationPanel.add(upButton);
-    c.gridwidth = GridBagConstraints.REMAINDER;
-    gridbag.setConstraints(upRightButton, c);
-    navigationPanel.add(upRightButton);
-    c.gridwidth = 1;
-    gridbag.setConstraints(leftButton, c);
-    navigationPanel.add(leftButton);
-    JLabel spacer = new JLabel();
-    gridbag.setConstraints(spacer, c);
-    navigationPanel.add(spacer);
-    c.gridwidth = GridBagConstraints.REMAINDER;
-    gridbag.setConstraints(rightButton, c);
-    navigationPanel.add(rightButton);
-    c.gridwidth = 1;
-    gridbag.setConstraints(downLeftButton, c);
-    navigationPanel.add(downLeftButton);
-    gridbag.setConstraints(downButton, c);
-    navigationPanel.add(downButton);
-    c.gridwidth = GridBagConstraints.REMAINDER;
-    gridbag.setConstraints(downRightButton, c);
-    navigationPanel.add(downRightButton);
-
+    zoomingPanel.setLayout(gridbag);
     c.gridwidth = 1;
     gridbag.setConstraints(zoomOutButton, c);
-    navigationPanel.add(zoomOutButton);
+    zoomingPanel.add(zoomOutButton);
     gridbag.setConstraints(zoomInButton, c);
-    navigationPanel.add(zoomInButton);
+    zoomingPanel.add(zoomInButton);
 
-    return navigationPanel;
+    return zoomingPanel;
+  }
+
+  private JPanel createPanningPanel() {
+    JPanel panningPanel = new JPanel();
+    panningPanel.setBorder(new TitledBorder("Panning Panel"));
+    GridBagLayout gridbag = new GridBagLayout();
+    GridBagConstraints c = new GridBagConstraints();
+    panningPanel.setLayout(gridbag);
+    c.gridwidth = 1;
+    gridbag.setConstraints(upLeftButton, c);
+    panningPanel.add(upLeftButton);
+    gridbag.setConstraints(upButton, c);
+    panningPanel.add(upButton);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    gridbag.setConstraints(upRightButton, c);
+    panningPanel.add(upRightButton);
+    c.gridwidth = 1;
+    gridbag.setConstraints(leftButton, c);
+    panningPanel.add(leftButton);
+    JLabel spacer = new JLabel();
+    gridbag.setConstraints(spacer, c);
+    panningPanel.add(spacer);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    gridbag.setConstraints(rightButton, c);
+    panningPanel.add(rightButton);
+    c.gridwidth = 1;
+    gridbag.setConstraints(downLeftButton, c);
+    panningPanel.add(downLeftButton);
+    gridbag.setConstraints(downButton, c);
+    panningPanel.add(downButton);
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    gridbag.setConstraints(downRightButton, c);
+    panningPanel.add(downRightButton);
+
+    return panningPanel;
   }
 
   private JPanel createColorControlPanel() {
@@ -490,38 +506,10 @@ public class Main {
   }
 
   public static void main(String[] args) {
-    Map<String, String> flags = parseFlags(args);
-    final boolean useNativeCode = flags.containsKey("useNativeCode")
-        ? Boolean.parseBoolean(flags.get("useNativeCode"))
-        : false;
-
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        new Main(useNativeCode);
+        new Main();
       }
     });
-  }
-
-  private static Map<String, String> parseFlags(String[] args) {
-    Map<String, String> flags = new HashMap<>();
-    for (String arg : args) {
-      if (arg.startsWith("--")) {
-        int equalsSign = arg.indexOf("=");
-        if (equalsSign > 0) {
-          String key = arg.substring(2, equalsSign);
-          String value = arg.substring(equalsSign + 1);
-          flags.put(key, value);
-        } else {
-          String key = arg.substring(2);
-          Boolean value = true;
-          if (key.startsWith("no")) {
-            value = false;
-            key = arg.substring(2);
-          }
-          flags.put(key, value.toString());
-        }
-      }
-    }
-    return flags;
   }
 }

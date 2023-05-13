@@ -23,11 +23,12 @@ public class Mandlebrot {
   private final boolean useNativeCode;
   private final int numThreads;
   private final int sizeInPixels;
+  private final double size;
+  private final double pixelsPerUnit;
   private final double aMin;
   private final double bMin;
-  private final double size;
   private final Object valuesLock = new Object();
-  private final int[][] values;
+  private final int[] values;
 
   public Mandlebrot(boolean useNativeCode, int numThreads,
       int sizeInPixels, double aCenter, double bCenter, double size) {
@@ -36,10 +37,11 @@ public class Mandlebrot {
     this.useNativeCode = useNativeCode;
     this.numThreads = numThreads;
     this.sizeInPixels = sizeInPixels;
+    this.size = size;
+    pixelsPerUnit = sizeInPixels / size;
     aMin = aCenter - size / 2;
     bMin = bCenter - size / 2;
-    this.size = size;
-    values = new int[sizeInPixels][sizeInPixels];
+    values = new int[sizeInPixels * sizeInPixels];
 
     calculatePixelValues();
   }
@@ -58,8 +60,8 @@ public class Mandlebrot {
   }
 
   public Mandlebrot panZoom(int x, int y, double zoomFactor) {
-    double cA = aMin + size * x / sizeInPixels;
-    double cB = bMin + size * y / sizeInPixels;
+    double cA = aMin + x / pixelsPerUnit;
+    double cB = bMin + y / pixelsPerUnit;
     return new Mandlebrot(useNativeCode, numThreads, sizeInPixels, cA, cB, size * zoomFactor);
   }
 
@@ -67,11 +69,21 @@ public class Mandlebrot {
     return s;
   }
 
+  private static native void calculatePixelValuesNative(int[] values, int numThreads, double aMin, double bMin, double pixelsPerUnit, int sizeInPixels, int maxValue);
+
   private void calculatePixelValues() {
+    if (useNativeCode) {
+      calculatePixelValuesNative(values, numThreads, aMin, bMin, pixelsPerUnit, sizeInPixels, MAX_VALUE);
+      return;
+    }
+
     Thread[] threads = new Thread[numThreads];
     for (int i = 0; i < numThreads; i++) {
-      threads[i] = startThread(i);
+      final int threadNumber = i;
+      threads[i] = new Thread(() -> calculateValuesForThread(threadNumber));
+      threads[i].start();
     }
+
     for (int i = 0; i < numThreads; i++) {
       try {
         threads[i].join();
@@ -79,35 +91,27 @@ public class Mandlebrot {
         e.printStackTrace();
       }
     }
-
   }
 
-  private Thread startThread(final int threadNumber) {
-    Thread thread = new Thread(new Runnable() {
-      public void run() {
-        int i = 0;
-        for (int y = 0; y < sizeInPixels; y++) {
-          for (int x = 0; x < sizeInPixels; x++) {
-            if (numThreads == 1 || i % numThreads == threadNumber) {
-              int value = calculatePixelValue(x, y);
-              synchronized (valuesLock) {
-                values[y][x] = value;
-              }
-            }
-            i++;
+  private void calculateValuesForThread(int threadNumber) {
+    int i = 0;
+    for (int y = 0; y < sizeInPixels; y++) {
+      for (int x = 0; x < sizeInPixels; x++) {
+        if (numThreads == 1 || i % numThreads == threadNumber) {
+          double cA = aMin + x / pixelsPerUnit;
+          double cB = bMin + y / pixelsPerUnit;
+          int value = calculateValue(cA, cB);
+
+          synchronized (valuesLock) {
+            values[i] = value;
           }
         }
+        i++;
       }
-    });
-    thread.start();
-    return thread;
+    }
   }
 
-  private int calculatePixelValue(int x, int y) {
-    double cA = aMin + size * x / sizeInPixels;
-    double cB = bMin + size * y / sizeInPixels;
-    return calculateValue(cA, cB);
-  }
+  private static native int calculateValueNative(double cA, double cB, int maxValue);
 
   private int calculateValue(double cA, double cB) {
     if (useNativeCode) {
@@ -129,17 +133,17 @@ public class Mandlebrot {
     return Integer.MAX_VALUE;
   }
 
-  private static native int calculateValueNative(double cA, double cB, int maxValue);
-
   public interface Visitor {
     void visit(int x, int y, int value);
   }
 
   public void accept(Visitor visitor) {
     synchronized (valuesLock) {
+      int i = 0;
       for (int y = 0; y < sizeInPixels; y++) {
         for (int x = 0; x < sizeInPixels; x++) {
-          visitor.visit(x, y, values[y][x]);
+          visitor.visit(x, y, values[i]);
+          i++;
         }
       }
     }

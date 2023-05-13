@@ -21,12 +21,102 @@
   android:background="@android:color/black">
   <LinearLayout
     android:orientation="vertical"
+    android:gravity="center_horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <ImageView
-      android:id="@+id/mandlebrotImageView"
-      android:layout_width="wrap_content"
+    <LinearLayout
+      android:id="@+id/mandlebrotImageViewParent"
+      android:orientation="vertical"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+    </LinearLayout>
+    <TextView
+      android:id="@+id/mandlebrotLabel"
+      android:gravity="center_horizontal"
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      />
+      android:layout_marginLeft="5dp"
+      android:layout_marginRight="5dp"
+      android:textSize="14sp" />
+    <LinearLayout
+      android:orientation="horizontal"
+      android:gravity="center_horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+      <Button
+        android:id="@+id/back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Back" />
+      <Button
+        android:id="@+id/zoomOut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ZoomOut" />
+      <Button
+        android:id="@+id/zoomIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ZoomIn" />
+    </LinearLayout>
+    <GridLayout
+      android:gravity="center_horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:rowCount="3"
+      android:columnCount="3">
+      <Button
+        android:id="@+id/upLeft"
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content"
+        android:text="@string/UpLeft" />
+      <Button
+        android:id="@+id/up"
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content"
+        android:text="@string/Up" />
+      <Button
+        android:id="@+id/upRight"
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content"
+        android:text="@string/UpRight" />
+      <Button
+        android:id="@+id/left"
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content"
+        android:text="@string/Left" />
+      <Space
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content" />
+      <Button
+        android:id="@+id/right"
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content"
+        android:text="@string/Right" />
+      <Button
+        android:id="@+id/downLeft"
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content"
+        android:text="@string/DownLeft" />
+      <Button
+        android:id="@+id/down"
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content"
+        android:text="@string/Down" />
+      <Button
+        android:id="@+id/downRight"
+        android:layout_width="0dp"
+        android:layout_columnWeight="1"
+        android:layout_height="wrap_content"
+        android:text="@string/DownRight" />
+    </GridLayout>
   </LinearLayout>
 </FrameLayout>
