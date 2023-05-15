@@ -27,10 +27,15 @@ import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.NumberPicker;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.core.view.GestureDetectorCompat;
@@ -45,25 +50,33 @@ public final class MandlebrotActivity extends Activity {
   private static final double ZOOM_OUT = 4;
   private static final double ZOOM_IN = 1 / ZOOM_OUT;
 
+  private static final int BACK_ZOOM_PAN = 0;
+  private static final int HUE = 1;
+  private static final int SATURATION = 2;
+  private static final int VALUE = 3;
+
   private final Deque<Mandlebrot> mStack = new ArrayDeque<>();
-  private ColorTable colorTable;
   private int mandlebrotSize;
 
   private ImageView mandlebrotImageView;
-  private TextView mandlebrotLabel;
+  private TextView mandlebrotTextView;
   private Button backButton;
-  private Button zoomOutButton;
-  private Button zoomInButton;
-  private Button upLeftButton;
-  private Button upButton;
-  private Button upRightButton;
-  private Button leftButton;
-  private Button rightButton;
-  private Button downLeftButton;
-  private Button downButton;
-  private Button downRightButton;
-
+  private NumberPicker hStart;
+  private NumberPicker hMin;
+  private NumberPicker hMax;
+  private NumberPicker hDelta;
+  private NumberPicker sStart;
+  private NumberPicker sMin;
+  private NumberPicker sMax;
+  private NumberPicker sDelta;
+  private NumberPicker vStart;
+  private NumberPicker vMin;
+  private NumberPicker vMax;
+  private NumberPicker vDelta;
   private final List<View> views = new ArrayList<>();
+  private final List<NumberPicker> colorControlWidgets = new ArrayList<>();
+
+  private ColorTable colorTable;
 
   static {
     System.loadLibrary("android_app");
@@ -75,6 +88,8 @@ public final class MandlebrotActivity extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.mandlebrot_activity);
 
+    mandlebrotSize = getSizeForMandlebrot();
+
     final float[] hsv = new float[3];
     colorTable = new ColorTable(Mandlebrot.MAX_VALUE, (h, s, b) -> {
       hsv[0] = (float) h * 360f;
@@ -82,23 +97,37 @@ public final class MandlebrotActivity extends Activity {
       hsv[2] = (float) b;
       return Color.HSVToColor(hsv);
     });
-    fillColorTable();
 
-    mandlebrotSize = getSizeForMandlebrot();
-
-    final LinearLayout mandlebrotImageViewParent = findViewById(R.id.mandlebrotImageViewParent);
-    mandlebrotLabel = findViewById(R.id.mandlebrotLabel);
+    final LinearLayout mandlebrotPanel = findViewById(R.id.mandlebrotPanel);
+    mandlebrotTextView = findViewById(R.id.mandlebrotTextView);
+    Spinner spinner = findViewById(R.id.spinner);
+    LinearLayout backPanZoomPanel = findViewById(R.id.backPanZoomPanel);
     backButton = findViewById(R.id.back);
-    zoomOutButton = findViewById(R.id.zoomOut);
-    zoomInButton = findViewById(R.id.zoomIn);
-    upLeftButton = findViewById(R.id.upLeft);
-    upButton = findViewById(R.id.up);
-    upRightButton = findViewById(R.id.upRight);
-    leftButton = findViewById(R.id.left);
-    rightButton = findViewById(R.id.right);
-    downLeftButton = findViewById(R.id.downLeft);
-    downButton = findViewById(R.id.down);
-    downRightButton = findViewById(R.id.downRight);
+    Button zoomOutButton = findViewById(R.id.zoomOut);
+    Button zoomInButton = findViewById(R.id.zoomIn);
+    Button upLeftButton = findViewById(R.id.upLeft);
+    Button upButton = findViewById(R.id.up);
+    Button upRightButton = findViewById(R.id.upRight);
+    Button leftButton = findViewById(R.id.left);
+    Button rightButton = findViewById(R.id.right);
+    Button downLeftButton = findViewById(R.id.downLeft);
+    Button downButton = findViewById(R.id.down);
+    Button downRightButton = findViewById(R.id.downRight);
+    LinearLayout huePanel = findViewById(R.id.huePanel);
+    hStart = findViewById(R.id.hStart);
+    hMin = findViewById(R.id.hMin);
+    hMax = findViewById(R.id.hMax);
+    hDelta = findViewById(R.id.hDelta);
+    LinearLayout saturationPanel = findViewById(R.id.saturationPanel);
+    sStart = findViewById(R.id.sStart);
+    sMin = findViewById(R.id.sMin);
+    sMax = findViewById(R.id.sMax);
+    sDelta = findViewById(R.id.sDelta);
+    LinearLayout valuePanel = findViewById(R.id.valuePanel);
+    vStart = findViewById(R.id.vStart);
+    vMin = findViewById(R.id.vMin);
+    vMax = findViewById(R.id.vMax);
+    vDelta = findViewById(R.id.vDelta);
 
     final GestureDetectorCompat gestureDetector = new GestureDetectorCompat(this, new SimpleOnGestureListener() {
       @Override
@@ -117,13 +146,30 @@ public final class MandlebrotActivity extends Activity {
         }
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-          mandlebrotImageViewParent.requestDisallowInterceptTouchEvent(true);
+          mandlebrotPanel.requestDisallowInterceptTouchEvent(true);
         }
         return true;
       }
     };
-    mandlebrotImageViewParent.addView(mandlebrotImageView,
+    mandlebrotPanel.addView(mandlebrotImageView,
         new LayoutParams(mandlebrotSize, mandlebrotSize, 0f));
+
+    ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
+        R.array.spinner_choices, R.layout.spinner);
+    spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown);
+    spinner.setAdapter(spinnerAdapter);
+    spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+      @Override
+      public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
+        backPanZoomPanel.setVisibility(pos == 0 ? View.VISIBLE : View.GONE);
+        huePanel.setVisibility(pos == 1 ? View.VISIBLE : View.GONE);
+        saturationPanel.setVisibility(pos == 2 ? View.VISIBLE : View.GONE);
+        valuePanel.setVisibility(pos == 3 ? View.VISIBLE : View.GONE);
+      }
+
+      @Override
+      public void onNothingSelected(AdapterView<?> parent) {}
+    });
 
     backButton.setOnClickListener(view -> {
       if (mStack.size() > 1) {
@@ -142,6 +188,55 @@ public final class MandlebrotActivity extends Activity {
     downButton.setOnClickListener(view -> pan(panCenter(), panDown()));
     downRightButton.setOnClickListener(view -> pan(panRight(), panDown()));
 
+    hStart.setMinValue(0);
+    hStart.setMaxValue(360);
+    hStart.setValue(0);
+    hStart.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    hMin.setMinValue(0);
+    hMin.setMaxValue(360);
+    hMin.setValue(0);
+    hMin.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    hMax.setMinValue(0);
+    hMax.setMaxValue(720);
+    hMax.setValue(360);
+    hMax.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    hDelta.setMinValue(0);
+    hDelta.setMaxValue(360);
+    hDelta.setValue(1);
+    hDelta.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(false));
+    sStart.setMinValue(0);
+    sStart.setMaxValue(100);
+    sStart.setValue(70);
+    sStart.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    sMin.setMinValue(0);
+    sMin.setMaxValue(100);
+    sMax.setValue(0);
+    sMin.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    sMax.setMinValue(0);
+    sMax.setMaxValue(100);
+    sMax.setValue(100);
+    sMax.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    sDelta.setMinValue(0);
+    sDelta.setMaxValue(100);
+    sDelta.setValue(0);
+    sDelta.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(false));
+    vStart.setMinValue(0);
+    vStart.setMaxValue(100);
+    vStart.setValue(70);
+    vStart.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    vMin.setMinValue(0);
+    vMin.setMaxValue(100);
+    vMax.setValue(0);
+    vMin.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    vMax.setMinValue(0);
+    vMax.setMaxValue(100);
+    vMax.setValue(100);
+    vMax.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
+    vDelta.setMinValue(0);
+    vDelta.setMaxValue(100);
+    vDelta.setValue(0);
+    vDelta.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(false));
+
     views.add(mandlebrotImageView);
     views.add(backButton);
     views.add(zoomOutButton);
@@ -154,6 +249,33 @@ public final class MandlebrotActivity extends Activity {
     views.add(downLeftButton);
     views.add(downButton);
     views.add(downRightButton);
+    views.add(hStart);
+    views.add(hMin);
+    views.add(hMax);
+    views.add(hDelta);
+    views.add(sStart);
+    views.add(sMin);
+    views.add(sMax);
+    views.add(sDelta);
+    views.add(vStart);
+    views.add(vMin);
+    views.add(vMax);
+    views.add(vDelta);
+    colorControlWidgets.add(hStart);
+    colorControlWidgets.add(hMin);
+    colorControlWidgets.add(hMax);
+    colorControlWidgets.add(hDelta);
+    colorControlWidgets.add(sStart);
+    colorControlWidgets.add(sMin);
+    colorControlWidgets.add(sMax);
+    colorControlWidgets.add(sDelta);
+    colorControlWidgets.add(vStart);
+    colorControlWidgets.add(vMin);
+    colorControlWidgets.add(vMax);
+    colorControlWidgets.add(vDelta);
+
+    fillColorTable();
+    updateColorControlWidgets();
 
     final Toast toast = Toast.makeText(MandlebrotActivity.this, "Calculating...", Toast.LENGTH_LONG);
     toast.show();
@@ -172,9 +294,53 @@ public final class MandlebrotActivity extends Activity {
 
   private void fillColorTable() {
     colorTable.fill(
-        new ColorTable.Hue(0, 0, 360, 1),
-        new ColorTable.Saturation(70, 0, 100, 0),
-        new ColorTable.Brightness(70, 0, 100, 0));
+        new ColorTable.Hue(hStart.getValue(), hMin.getValue(), hMax.getValue(), hDelta.getValue()),
+        new ColorTable.Saturation(sStart.getValue(), sMin.getValue(), sMax.getValue(), sDelta.getValue()),
+        new ColorTable.Brightness(vStart.getValue(), vMin.getValue(), vMax.getValue(), vDelta.getValue()));
+  }
+
+  private void colorControlPanelChanged(boolean updateColorControlWidgets) {
+    if (updateColorControlWidgets) {
+      updateColorControlWidgets();
+    }
+    colorControlPanelChanged();
+  }
+
+  private void updateColorControlWidgets() {
+    float[] hsv = new float[3];
+    for (NumberPicker p : colorControlWidgets) {
+      if (p == hStart || p == hMin || p == hMax) {
+        hsv[0] = p.getValue();
+        hsv[1] = 0.7f;
+        hsv[2] = 0.7f;
+        p.setBackgroundColor(Color.HSVToColor(hsv));
+      } else if (p == sStart || p == sMin || p == sMax) {
+        hsv[0] = hStart.getValue();
+        hsv[1] = p.getValue() / 100f;
+        hsv[2] = 0.7f;
+        p.setBackgroundColor(Color.HSVToColor(hsv));
+      } else if (p == vStart || p == vMin || p == vMax) {
+        hsv[0] = hStart.getValue();
+        hsv[1] = 0.7f;
+        hsv[2] = p.getValue() / 100f;
+        p.setBackgroundColor(Color.HSVToColor(hsv));
+      }
+    }
+  }
+
+  private void colorControlPanelChanged() {
+    fillColorTable();
+
+    Bitmap bitmap = produceImage(mStack.peekLast());
+    mandlebrotImageView.setImageBitmap(bitmap);
+  }
+
+  private Bitmap produceImage(Mandlebrot m) {
+    final Bitmap bitmap = Bitmap.createBitmap(mandlebrotSize, mandlebrotSize, Bitmap.Config.ARGB_8888);
+    m.accept((x, y, value) -> {
+      bitmap.setPixel(x, y, 0xFF000000 | colorTable.valueToColor(value));
+    });
+    return bitmap;
   }
 
   private int getSizeForMandlebrot() {
@@ -205,12 +371,9 @@ public final class MandlebrotActivity extends Activity {
   private void onMandlebrotChanged(final Toast toast) {
     backButton.setEnabled(mStack.size() > 1);
     Mandlebrot mandlebrot = mStack.peekLast();
-    mandlebrotLabel.setText(mandlebrot.toString());
+    mandlebrotTextView.setText(mandlebrot.toString());
 
-    final Bitmap bitmap = Bitmap.createBitmap(mandlebrotSize, mandlebrotSize, Bitmap.Config.ARGB_8888);
-    mandlebrot.accept((x, y, value) -> {
-      bitmap.setPixel(x, y, 0xFF000000 | colorTable.valueToColor(value));
-    });
+    Bitmap bitmap = produceImage(mandlebrot);
     mandlebrotImageView.setImageBitmap(bitmap);
 
     if (toast != null) {
