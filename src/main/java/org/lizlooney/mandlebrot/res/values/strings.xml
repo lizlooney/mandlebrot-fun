@@ -18,6 +18,14 @@
 <resources>
   <string name="app_name">MandlebrotFun</string>
   <string name="Title">Lizzie\'s Fun Mandlebrot Generator</string>
+
+  <string-array name="spinner_choices">
+    <item>Pan and Zoom</item>
+    <item>Color... Hue</item>
+    <item>Color... Saturation</item>
+    <item>Color... Value</item>
+  </string-array>
+
   <string name="Back">&lt;</string>
   <string name="ZoomOut">&#x1f50d;-</string>
   <string name="ZoomIn">&#x1f50d;+</string>
@@ -29,4 +37,11 @@
   <string name="DownLeft">\u2199</string>
   <string name="Down">\u2193</string>
   <string name="DownRight">\u2198</string>
+  <string name="Start">Start</string>
+  <string name="Min">Min</string>
+  <string name="Max">Max</string>
+  <string name="Delta">Delta</string>
+  <string name="Hue">Hue</string>
+  <string name="Saturation">Saturation</string>
+  <string name="Value">Value</string>
 </resources>

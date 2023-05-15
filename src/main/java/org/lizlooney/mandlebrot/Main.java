@@ -419,6 +419,8 @@ public class Main {
 
     c.gridwidth = 1;
     label = new JLabel("Hue");
+    label.setHorizontalAlignment(SwingConstants.RIGHT);
+    c.fill = GridBagConstraints.HORIZONTAL;
     gridbag.setConstraints(label, c);
     colorControlPanel.add(label);
     // Hue initial value
@@ -437,6 +439,7 @@ public class Main {
 
     c.gridwidth = 1;
     label = new JLabel("Saturation");
+    label.setHorizontalAlignment(SwingConstants.RIGHT);
     gridbag.setConstraints(label, c);
     colorControlPanel.add(label);
     // Saturation initial value
@@ -455,6 +458,7 @@ public class Main {
 
     c.gridwidth = 1;
     label = new JLabel("Brightness");
+    label.setHorizontalAlignment(SwingConstants.RIGHT);
     gridbag.setConstraints(label, c);
     colorControlPanel.add(label);
     // Brightness initial value
