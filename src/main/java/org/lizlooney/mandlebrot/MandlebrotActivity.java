@@ -24,6 +24,7 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.view.View;
@@ -31,10 +32,10 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,31 +51,26 @@ public final class MandlebrotActivity extends Activity {
   private static final double ZOOM_OUT = 4;
   private static final double ZOOM_IN = 1 / ZOOM_OUT;
 
-  private static final int BACK_ZOOM_PAN = 0;
-  private static final int HUE = 1;
-  private static final int SATURATION = 2;
-  private static final int VALUE = 3;
+  private static final int SPINNER_POS_BACK_ZOOM_PAN = 0;
+  private static final int SPINNER_POS_COLOR = 1;
 
   private final Deque<Mandlebrot> mStack = new ArrayDeque<>();
   private int mandlebrotSize;
 
   private ImageView mandlebrotImageView;
+  private ColorTableView colorTableView;
   private TextView mandlebrotTextView;
   private Button backButton;
-  private NumberPicker hStart;
-  private NumberPicker hMin;
-  private NumberPicker hMax;
-  private NumberPicker hDelta;
-  private NumberPicker sStart;
-  private NumberPicker sMin;
-  private NumberPicker sMax;
-  private NumberPicker sDelta;
-  private NumberPicker vStart;
-  private NumberPicker vMin;
-  private NumberPicker vMax;
-  private NumberPicker vDelta;
+  private EditText hMin;
+  private EditText hMax;
+  private EditText hDelta;
+  private EditText sMin;
+  private EditText sMax;
+  private EditText sDelta;
+  private EditText vMin;
+  private EditText vMax;
+  private EditText vDelta;
   private final List<View> views = new ArrayList<>();
-  private final List<NumberPicker> colorControlWidgets = new ArrayList<>();
 
   private ColorTable colorTable;
 
@@ -92,13 +88,14 @@ public final class MandlebrotActivity extends Activity {
 
     final float[] hsv = new float[3];
     colorTable = new ColorTable(Mandlebrot.MAX_VALUE, (h, s, b) -> {
-      hsv[0] = (float) h * 360f;
-      hsv[1] = (float) s;
-      hsv[2] = (float) b;
+      hsv[0] = (float) (h - Math.floor(h)) * 360f;
+      hsv[1] = s;
+      hsv[2] = b;
       return Color.HSVToColor(hsv);
     });
 
     final LinearLayout mandlebrotPanel = findViewById(R.id.mandlebrotPanel);
+    LinearLayout colorTablePanel = findViewById(R.id.colorTablePanel);
     mandlebrotTextView = findViewById(R.id.mandlebrotTextView);
     Spinner spinner = findViewById(R.id.spinner);
     LinearLayout backPanZoomPanel = findViewById(R.id.backPanZoomPanel);
@@ -113,21 +110,34 @@ public final class MandlebrotActivity extends Activity {
     Button downLeftButton = findViewById(R.id.downLeft);
     Button downButton = findViewById(R.id.down);
     Button downRightButton = findViewById(R.id.downRight);
-    LinearLayout huePanel = findViewById(R.id.huePanel);
-    hStart = findViewById(R.id.hStart);
+    LinearLayout colorPanel = findViewById(R.id.colorPanel);
     hMin = findViewById(R.id.hMin);
+    Button hMinInc = findViewById(R.id.hMinInc);
+    Button hMinDec = findViewById(R.id.hMinDec);
     hMax = findViewById(R.id.hMax);
+    Button hMaxInc = findViewById(R.id.hMaxInc);
+    Button hMaxDec = findViewById(R.id.hMaxDec);
     hDelta = findViewById(R.id.hDelta);
-    LinearLayout saturationPanel = findViewById(R.id.saturationPanel);
-    sStart = findViewById(R.id.sStart);
+    Button hDeltaInc = findViewById(R.id.hDeltaInc);
+    Button hDeltaDec = findViewById(R.id.hDeltaDec);
     sMin = findViewById(R.id.sMin);
+    Button sMinInc = findViewById(R.id.sMinInc);
+    Button sMinDec = findViewById(R.id.sMinDec);
     sMax = findViewById(R.id.sMax);
+    Button sMaxInc = findViewById(R.id.sMaxInc);
+    Button sMaxDec = findViewById(R.id.sMaxDec);
     sDelta = findViewById(R.id.sDelta);
-    LinearLayout valuePanel = findViewById(R.id.valuePanel);
-    vStart = findViewById(R.id.vStart);
+    Button sDeltaInc = findViewById(R.id.sDeltaInc);
+    Button sDeltaDec = findViewById(R.id.sDeltaDec);
     vMin = findViewById(R.id.vMin);
+    Button vMinInc = findViewById(R.id.vMinInc);
+    Button vMinDec = findViewById(R.id.vMinDec);
     vMax = findViewById(R.id.vMax);
+    Button vMaxInc = findViewById(R.id.vMaxInc);
+    Button vMaxDec = findViewById(R.id.vMaxDec);
     vDelta = findViewById(R.id.vDelta);
+    Button vDeltaInc = findViewById(R.id.vDeltaInc);
+    Button vDeltaDec = findViewById(R.id.vDeltaDec);
 
     final GestureDetectorCompat gestureDetector = new GestureDetectorCompat(this, new SimpleOnGestureListener() {
       @Override
@@ -152,7 +162,12 @@ public final class MandlebrotActivity extends Activity {
       }
     };
     mandlebrotPanel.addView(mandlebrotImageView,
-        new LayoutParams(mandlebrotSize, mandlebrotSize, 0f));
+        new LayoutParams(mandlebrotSize, mandlebrotSize));
+
+    colorTableView = new ColorTableView(this, colorTable);
+    LayoutParams layoutParams = new LayoutParams(colorTable.size(), 50 /* height */);
+    layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+    colorTablePanel.addView(colorTableView, layoutParams);
 
     ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
         R.array.spinner_choices, R.layout.spinner);
@@ -161,10 +176,8 @@ public final class MandlebrotActivity extends Activity {
     spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
-        backPanZoomPanel.setVisibility(pos == 0 ? View.VISIBLE : View.GONE);
-        huePanel.setVisibility(pos == 1 ? View.VISIBLE : View.GONE);
-        saturationPanel.setVisibility(pos == 2 ? View.VISIBLE : View.GONE);
-        valuePanel.setVisibility(pos == 3 ? View.VISIBLE : View.GONE);
+        backPanZoomPanel.setVisibility(pos == SPINNER_POS_BACK_ZOOM_PAN ? View.VISIBLE : View.GONE);
+        colorPanel.setVisibility(pos == SPINNER_POS_COLOR ? View.VISIBLE : View.GONE);
       }
 
       @Override
@@ -188,54 +201,87 @@ public final class MandlebrotActivity extends Activity {
     downButton.setOnClickListener(view -> pan(panCenter(), panDown()));
     downRightButton.setOnClickListener(view -> pan(panRight(), panDown()));
 
-    hStart.setMinValue(0);
-    hStart.setMaxValue(360);
-    hStart.setValue(0);
-    hStart.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    hMin.setMinValue(0);
-    hMin.setMaxValue(360);
-    hMin.setValue(0);
-    hMin.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    hMax.setMinValue(0);
-    hMax.setMaxValue(720);
-    hMax.setValue(360);
-    hMax.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    hDelta.setMinValue(0);
-    hDelta.setMaxValue(360);
-    hDelta.setValue(1);
-    hDelta.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(false));
-    sStart.setMinValue(0);
-    sStart.setMaxValue(100);
-    sStart.setValue(70);
-    sStart.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    sMin.setMinValue(0);
-    sMin.setMaxValue(100);
-    sMax.setValue(0);
-    sMin.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    sMax.setMinValue(0);
-    sMax.setMaxValue(100);
-    sMax.setValue(100);
-    sMax.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    sDelta.setMinValue(0);
-    sDelta.setMaxValue(100);
-    sDelta.setValue(0);
-    sDelta.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(false));
-    vStart.setMinValue(0);
-    vStart.setMaxValue(100);
-    vStart.setValue(70);
-    vStart.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    vMin.setMinValue(0);
-    vMin.setMaxValue(100);
-    vMax.setValue(0);
-    vMin.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    vMax.setMinValue(0);
-    vMax.setMaxValue(100);
-    vMax.setValue(100);
-    vMax.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(true));
-    vDelta.setMinValue(0);
-    vDelta.setMaxValue(100);
-    vDelta.setValue(0);
-    vDelta.setOnValueChangedListener((p, o, v) -> colorControlPanelChanged(false));
+    hMin.setText("0"); // "180");
+    hMin.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    hMinInc.setOnClickListener(view -> incDec(hMin, 1));
+    hMinDec.setOnClickListener(view -> incDec(hMin, -1));
+    hMax.setText("720"); // "270");
+    hMax.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    hMaxInc.setOnClickListener(view -> incDec(hMax, 1));
+    hMaxDec.setOnClickListener(view -> incDec(hMax, -1));
+    hDelta.setText("1");
+    hDelta.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    hDeltaInc.setOnClickListener(view -> incDec(hDelta, 1));
+    hDeltaDec.setOnClickListener(view -> incDec(hDelta, -1));
+    sMin.setText("70");
+    sMin.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    sMinInc.setOnClickListener(view -> incDec(sMin, 1));
+    sMinDec.setOnClickListener(view -> incDec(sMin, -1));
+    sMax.setText("100");
+    sMax.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    sMaxInc.setOnClickListener(view -> incDec(sMax, 1));
+    sMaxDec.setOnClickListener(view -> incDec(sMax, -1));
+    sDelta.setText("0");
+    sDelta.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    sDeltaInc.setOnClickListener(view -> incDec(sDelta, 1));
+    sDeltaDec.setOnClickListener(view -> incDec(sDelta, -1));
+    vMin.setText("70");
+    vMin.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    vMinInc.setOnClickListener(view -> incDec(vMin, 1));
+    vMinDec.setOnClickListener(view -> incDec(vMin, -1));
+    vMax.setText("100");
+    vMax.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    vMaxInc.setOnClickListener(view -> incDec(vMax, 1));
+    vMaxDec.setOnClickListener(view -> incDec(vMax, -1));
+    vDelta.setText("0");
+    vDelta.addTextChangedListener(new TextWatcherAdapter() {
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+        colorControlPanelChanged();
+      }
+    });
+    vDeltaInc.setOnClickListener(view -> incDec(vDelta, 1));
+    vDeltaDec.setOnClickListener(view -> incDec(vDelta, -1));
 
     views.add(mandlebrotImageView);
     views.add(backButton);
@@ -249,33 +295,35 @@ public final class MandlebrotActivity extends Activity {
     views.add(downLeftButton);
     views.add(downButton);
     views.add(downRightButton);
-    views.add(hStart);
     views.add(hMin);
+    views.add(hMinInc);
+    views.add(hMinDec);
     views.add(hMax);
+    views.add(hMaxInc);
+    views.add(hMaxDec);
     views.add(hDelta);
-    views.add(sStart);
+    views.add(hDeltaInc);
+    views.add(hDeltaDec);
     views.add(sMin);
+    views.add(sMinInc);
+    views.add(sMinDec);
     views.add(sMax);
+    views.add(sMaxInc);
+    views.add(sMaxDec);
     views.add(sDelta);
-    views.add(vStart);
+    views.add(sDeltaInc);
+    views.add(sDeltaDec);
     views.add(vMin);
+    views.add(vMinInc);
+    views.add(vMinDec);
     views.add(vMax);
+    views.add(vMaxInc);
+    views.add(vMaxDec);
     views.add(vDelta);
-    colorControlWidgets.add(hStart);
-    colorControlWidgets.add(hMin);
-    colorControlWidgets.add(hMax);
-    colorControlWidgets.add(hDelta);
-    colorControlWidgets.add(sStart);
-    colorControlWidgets.add(sMin);
-    colorControlWidgets.add(sMax);
-    colorControlWidgets.add(sDelta);
-    colorControlWidgets.add(vStart);
-    colorControlWidgets.add(vMin);
-    colorControlWidgets.add(vMax);
-    colorControlWidgets.add(vDelta);
+    views.add(vDeltaInc);
+    views.add(vDeltaDec);
 
     fillColorTable();
-    updateColorControlWidgets();
 
     final Toast toast = Toast.makeText(MandlebrotActivity.this, "Calculating...", Toast.LENGTH_LONG);
     toast.show();
@@ -294,37 +342,66 @@ public final class MandlebrotActivity extends Activity {
 
   private void fillColorTable() {
     colorTable.fill(
-        new ColorTable.Hue(hStart.getValue(), hMin.getValue(), hMax.getValue(), hDelta.getValue()),
-        new ColorTable.Saturation(sStart.getValue(), sMin.getValue(), sMax.getValue(), sDelta.getValue()),
-        new ColorTable.Brightness(vStart.getValue(), vMin.getValue(), vMax.getValue(), vDelta.getValue()));
+        new ColorTable.Hue(valueOf(hMin), valueOf(hMax), valueOf(hDelta)),
+        new ColorTable.Saturation(valueOf(sMin), valueOf(sMax), valueOf(sDelta)),
+        new ColorTable.Brightness(valueOf(vMin), valueOf(vMax), valueOf(vDelta)));
   }
 
-  private void colorControlPanelChanged(boolean updateColorControlWidgets) {
-    if (updateColorControlWidgets) {
-      updateColorControlWidgets();
+  private float valueOf(EditText editText) {
+    float value = 0;
+    try {
+      value = Float.parseFloat(editText.getText().toString());
+    } catch (NumberFormatException e) {
     }
-    colorControlPanelChanged();
+    return constrainValue(editText, value);
   }
 
-  private void updateColorControlWidgets() {
-    float[] hsv = new float[3];
-    for (NumberPicker p : colorControlWidgets) {
-      if (p == hStart || p == hMin || p == hMax) {
-        hsv[0] = p.getValue();
-        hsv[1] = 0.7f;
-        hsv[2] = 0.7f;
-        p.setBackgroundColor(Color.HSVToColor(hsv));
-      } else if (p == sStart || p == sMin || p == sMax) {
-        hsv[0] = hStart.getValue();
-        hsv[1] = p.getValue() / 100f;
-        hsv[2] = 0.7f;
-        p.setBackgroundColor(Color.HSVToColor(hsv));
-      } else if (p == vStart || p == vMin || p == vMax) {
-        hsv[0] = hStart.getValue();
-        hsv[1] = 0.7f;
-        hsv[2] = p.getValue() / 100f;
-        p.setBackgroundColor(Color.HSVToColor(hsv));
+  private float constrainValue(EditText editText, float value) {
+    if (editText == hMin) {
+      return constrainValue(value, 0, 360);
+    } else if (editText == hMax) {
+      return constrainValue(value, 0, 720);
+    } else if (editText == hDelta) {
+      return constrainValue(value, 0, 360);
+    } else if (editText == sMin) {
+      return constrainValue(value, 0, 100);
+    } else if (editText == sMax) {
+      return constrainValue(value, 0, 100);
+    } else if (editText == sDelta) {
+      return constrainValue(value, 0, 100);
+    } else if (editText == vMin) {
+      return constrainValue(value, 0, 100);
+    } else if (editText == vMax) {
+      return constrainValue(value, 0, 100);
+    } else if (editText == vDelta) {
+      return constrainValue(value, 0, 100);
+    }
+    throw new AssertionError("editText is not recognized");
+  }
+
+  private static float constrainValue(float value, float min, float max) {
+    if (value < min) {
+      return min;
+    } else if (value > max) {
+      return max;
+    }
+    return value;
+  }
+
+  private void incDec(EditText editText, float delta) {
+    float value = valueOf(editText);
+    float newValue = constrainValue(editText, value + delta);
+    String newText = Float.toString(newValue);
+    if (newText.contains(".")) {
+      while (newText.endsWith("0")) {
+        newText = newText.substring(0, newText.length() - 1);
       }
+      if (newText.endsWith(".")) {
+        newText = newText.substring(0, newText.length() - 1);
+      }
+    }
+    if (editText.getText().toString() != newText) {
+      editText.setText(newText);
     }
   }
 
@@ -333,6 +410,8 @@ public final class MandlebrotActivity extends Activity {
 
     Bitmap bitmap = produceImage(mStack.peekLast());
     mandlebrotImageView.setImageBitmap(bitmap);
+
+    colorTableView.invalidate();
   }
 
   private Bitmap produceImage(Mandlebrot m) {
