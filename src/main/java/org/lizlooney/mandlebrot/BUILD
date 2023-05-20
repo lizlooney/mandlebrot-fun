@@ -29,8 +29,10 @@ android_library(
     name = "mandlebrot_activity",
     srcs = [
       "ColorTable.java",
+      "ColorTableView.java",
       "Mandlebrot.java",
       "MandlebrotActivity.java",
+      "TextWatcherAdapter.java",
     ],
     deps = [
         "//src/main/cpp:mandlebrot_jni",

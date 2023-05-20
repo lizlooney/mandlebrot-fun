@@ -81,18 +81,15 @@ public class Main {
   private final JButton downRightButton = new JButton("\u2198");
   private final JButton zoomOutButton = new JButton(new String(Character.toChars(0x1f50d)) + "-");
   private final JButton zoomInButton = new JButton(new String(Character.toChars(0x1f50d)) + "+");
-  private final JSpinner hStart = new JSpinner(new SpinnerNumberModel(0, 0, 360, 1));
-  private final JSpinner hMin = new JSpinner(new SpinnerNumberModel(0, 0, 360, 1));
-  private final JSpinner hMax = new JSpinner(new SpinnerNumberModel(360, 0, 720, 1));
-  private final JSpinner hDelta = new JSpinner(new SpinnerNumberModel(1, 0, 360, 1));
-  private final JSpinner sStart = new JSpinner(new SpinnerNumberModel(70, 0, 100, 1));
-  private final JSpinner sMin = new JSpinner(new SpinnerNumberModel(0, 0, 100, 1));
-  private final JSpinner sMax = new JSpinner(new SpinnerNumberModel(100, 0, 100, 1));
-  private final JSpinner sDelta = new JSpinner(new SpinnerNumberModel(0, 0, 100, 1));
-  private final JSpinner bStart = new JSpinner(new SpinnerNumberModel(70, 0, 100, 1));
-  private final JSpinner bMin = new JSpinner(new SpinnerNumberModel(0, 0, 100, 1));
-  private final JSpinner bMax = new JSpinner(new SpinnerNumberModel(100, 0, 100, 1));
-  private final JSpinner bDelta = new JSpinner(new SpinnerNumberModel(0, 0, 100, 1));
+  private final JSpinner hMin = new JSpinner(new SpinnerNumberModel(0., 0., 360., 1.));
+  private final JSpinner hMax = new JSpinner(new SpinnerNumberModel(360., 0., 720., 1.));
+  private final JSpinner hDelta = new JSpinner(new SpinnerNumberModel(1., 0., 360., 1.));
+  private final JSpinner sMin = new JSpinner(new SpinnerNumberModel(70., 0., 100., 1.));
+  private final JSpinner sMax = new JSpinner(new SpinnerNumberModel(100., 0., 100., 1.));
+  private final JSpinner sDelta = new JSpinner(new SpinnerNumberModel(0., 0., 100., 1.));
+  private final JSpinner bMin = new JSpinner(new SpinnerNumberModel(70., 0., 100., 1.));
+  private final JSpinner bMax = new JSpinner(new SpinnerNumberModel(100., 0., 100., 1.));
+  private final JSpinner bDelta = new JSpinner(new SpinnerNumberModel(0., 0., 100., 1.));
   private final JPanel mandlebrotPanel = new MandlebrotPanel();
   private final JLabel mandlebrotLabel = new JLabel();
   private final JButton saveFileButton = new JButton("Save image file");
@@ -116,15 +113,12 @@ public class Main {
     components.add(downRightButton);
     components.add(zoomOutButton);
     components.add(zoomInButton);
-    components.add(hStart);
     components.add(hMin);
     components.add(hMax);
     components.add(hDelta);
-    components.add(sStart);
     components.add(sMin);
     components.add(sMax);
     components.add(sDelta);
-    components.add(bStart);
     components.add(bMin);
     components.add(bMax);
     components.add(bDelta);
@@ -156,15 +150,12 @@ public class Main {
     downButton.addActionListener(event -> pan(PAN_CENTER, PAN_DOWN));
     downRightButton.addActionListener(event -> pan(PAN_RIGHT, PAN_DOWN));
 
-    hStart.addChangeListener(event -> colorControlPanelChanged());
     hMin.addChangeListener(event -> colorControlPanelChanged());
     hMax.addChangeListener(event -> colorControlPanelChanged());
     hDelta.addChangeListener(event -> colorControlPanelChanged());
-    sStart.addChangeListener(event -> colorControlPanelChanged());
     sMin.addChangeListener(event -> colorControlPanelChanged());
     sMax.addChangeListener(event -> colorControlPanelChanged());
     sDelta.addChangeListener(event -> colorControlPanelChanged());
-    bStart.addChangeListener(event -> colorControlPanelChanged());
     bMin.addChangeListener(event -> colorControlPanelChanged());
     bMax.addChangeListener(event -> colorControlPanelChanged());
     bDelta.addChangeListener(event -> colorControlPanelChanged());
@@ -403,9 +394,6 @@ public class Main {
     JLabel label = new JLabel("");
     gridbag.setConstraints(label, c);
     colorControlPanel.add(label);
-    label = new JLabel("Start");
-    gridbag.setConstraints(label, c);
-    colorControlPanel.add(label);
     label = new JLabel("Min");
     gridbag.setConstraints(label, c);
     colorControlPanel.add(label);
@@ -423,9 +411,6 @@ public class Main {
     c.fill = GridBagConstraints.HORIZONTAL;
     gridbag.setConstraints(label, c);
     colorControlPanel.add(label);
-    // Hue initial value
-    gridbag.setConstraints(hStart, c);
-    colorControlPanel.add(hStart);
     // Hue minimum
     gridbag.setConstraints(hMin, c);
     colorControlPanel.add(hMin);
@@ -442,9 +427,6 @@ public class Main {
     label.setHorizontalAlignment(SwingConstants.RIGHT);
     gridbag.setConstraints(label, c);
     colorControlPanel.add(label);
-    // Saturation initial value
-    gridbag.setConstraints(sStart, c);
-    colorControlPanel.add(sStart);
     // Saturation minimum
     gridbag.setConstraints(sMin, c);
     colorControlPanel.add(sMin);
@@ -461,9 +443,6 @@ public class Main {
     label.setHorizontalAlignment(SwingConstants.RIGHT);
     gridbag.setConstraints(label, c);
     colorControlPanel.add(label);
-    // Brightness initial value
-    gridbag.setConstraints(bStart, c);
-    colorControlPanel.add(bStart);
     // Brightness minimum
     gridbag.setConstraints(bMin, c);
     colorControlPanel.add(bMin);
@@ -480,13 +459,13 @@ public class Main {
 
   private void fillColorTable() {
     colorTable.fill(
-        new ColorTable.Hue(valueOf(hStart), valueOf(hMin), valueOf(hMax), valueOf(hDelta)),
-        new ColorTable.Saturation(valueOf(sStart), valueOf(sMin), valueOf(sMax), valueOf(sDelta)),
-        new ColorTable.Brightness(valueOf(bStart), valueOf(bMin), valueOf(bMax), valueOf(bDelta)));
+        new ColorTable.Hue(valueOf(hMin), valueOf(hMax), valueOf(hDelta)),
+        new ColorTable.Saturation(valueOf(sMin), valueOf(sMax), valueOf(sDelta)),
+        new ColorTable.Brightness(valueOf(bMin), valueOf(bMax), valueOf(bDelta)));
   }
 
-  private static int valueOf(JSpinner spinner) {
-    return ((Integer) spinner.getValue()).intValue();
+  private static float valueOf(JSpinner spinner) {
+    return ((Double) spinner.getValue()).floatValue();
   }
 
   class MandlebrotPanel extends JPanel {

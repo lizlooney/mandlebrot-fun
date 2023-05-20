@@ -25,9 +25,14 @@ public class ColorTable {
     this.colorUtils = colorUtils;
   }
 
+  public int size() {
+    return table.length;
+  }
+
   public void fill(Hue h, Saturation s, Brightness b) {
     for (int i = 0; i < table.length; i++) {
-      table[i] = colorUtils.HSBtoRGB(h.hue(), s.saturation(), b.brightness());
+      table[i] = colorUtils.colorComponentsToRGB(h.hue(), s.saturation(), b.brightness());
+      float oldValue = h.value;
       h.next();
       s.next();
       b.next();
@@ -46,28 +51,34 @@ public class ColorTable {
   }
 
   interface ColorUtils {
-    int HSBtoRGB(double h, double s, double b);
+    int colorComponentsToRGB(float h, float s, float b);
   }
 
   static abstract class ColorComponent {
-    protected int value;
-    private final int min;
-    private final int max;
-    private int delta;
+    private final float min;
+    private final float max;
+    private final float delta;
+    protected float value;
+    protected int direction;
 
-    ColorComponent(int value, int min, int max, int delta) {
-      this.value = value;
+    ColorComponent(float min, float max, float delta) {
       this.min = min;
       this.max = max;
       this.delta = delta;
+      value = min;
+      direction = 1;
     }
 
     void next() {
       if (delta != 0) {
-        int newValue = value + delta;
-        if (newValue < min || newValue > max) {
-          delta *= -1;
-          newValue = value + delta;
+        float oldValue = value;
+        float newValue = value + delta * direction;
+        if (direction == 1 && newValue > max) {
+          direction = -1;
+          newValue = value + delta * direction;
+        } else if (direction == -1 && newValue < min) {
+          direction = 1;
+          newValue = value + delta * direction;
         }
         if (newValue >= min && newValue <= max) {
           value = newValue;
@@ -77,8 +88,8 @@ public class ColorTable {
   }
 
   public static class Hue extends ColorComponent {
-    Hue(int value, int min, int max, int delta) {
-      super(value, min, max, delta);
+    Hue(float min, float max, float delta) {
+      super(min, max, delta);
     }
 
     float hue() {
@@ -87,8 +98,8 @@ public class ColorTable {
   }
 
   public static class Saturation extends ColorComponent {
-    Saturation(int value, int min, int max, int delta) {
-      super(value, min, max, delta);
+    Saturation(float min, float max, float delta) {
+      super(min, max, delta);
     }
 
     float saturation() {
@@ -97,8 +108,8 @@ public class ColorTable {
   }
 
   public static class Brightness extends ColorComponent {
-    Brightness(int value, int min, int max, int delta) {
-      super(value, min, max, delta);
+    Brightness(float min, float max, float delta) {
+      super(min, max, delta);
     }
 
     float brightness() {

@@ -35,16 +35,21 @@
       android:gravity="center_horizontal"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:layout_marginLeft="5dp"
-      android:layout_marginRight="5dp"
+      android:layout_margin="5dp"
       android:textColor="@android:color/secondary_text_dark"
       android:textSize="14sp" />
+    <Space
+      android:layout_width="wrap_content"
+      android:layout_height="20dp" />
     <Spinner
       android:id="@+id/spinner"
       android:spinnerMode="dropdown"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content">
     </Spinner>
+    <Space
+      android:layout_width="wrap_content"
+      android:layout_height="20dp" />
     <LinearLayout
       android:id="@+id/backPanZoomPanel"
       android:visibility="visible"
@@ -144,26 +149,25 @@
       </GridLayout>
     </LinearLayout>
     <LinearLayout
-      android:id="@+id/huePanel"
+      android:id="@+id/colorPanel"
       android:visibility="gone"
       android:orientation="vertical"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
-      <TextView
-        android:text="@string/Hue"
-        android:gravity="center_horizontal"
+      <LinearLayout
+        android:id="@+id/colorTablePanel"
+        android:orientation="vertical"
+        android:layout_marginBottom="10dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp"/>
+        android:layout_height="wrap_content">
+      </LinearLayout>
       <GridLayout
         android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:rowCount="2"
+        android:rowCount="4"
         android:columnCount="4">
         <TextView
-          android:text="@string/Start"
           android:gravity="center_horizontal"
           android:layout_width="0dp"
           android:layout_columnWeight="1"
@@ -186,168 +190,411 @@
           android:layout_width="0dp"
           android:layout_columnWeight="1"
           android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/hStart"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/hMin"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/hMax"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/hDelta"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-      </GridLayout>
-    </LinearLayout>
-    <LinearLayout
-      android:id="@+id/saturationPanel"
-      android:visibility="gone"
-      android:orientation="vertical"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
-      <TextView
-        android:text="@string/Saturation"
-        android:gravity="center_horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp"/>
-      <GridLayout
-        android:gravity="center_horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:rowCount="2"
-        android:columnCount="4">
+        <!-- .............................................................. -->
         <TextView
-          android:text="@string/Start"
-          android:gravity="center_horizontal"
+          android:text="@string/Hue"
+          android:gravity="right"
+          android:layout_marginTop="10dp"
+          android:layout_marginBottom="10dp"
           android:layout_width="0dp"
           android:layout_columnWeight="1"
           android:layout_height="wrap_content"/>
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
+          android:layout_width="0dp"
+          android:layout_columnWeight="1"
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/hMin"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/hMinInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/hMinDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
+          android:layout_width="0dp"
+          android:layout_columnWeight="1"
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/hMax"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/hMaxInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/hMaxDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
+          android:layout_width="0dp"
+          android:layout_columnWeight="1"
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/hDelta"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/hDeltaInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/hDeltaDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
+        <!-- .............................................................. -->
         <TextView
-          android:text="@string/Min"
-          android:gravity="center_horizontal"
+          android:text="@string/Saturation"
+          android:gravity="right"
+          android:layout_marginTop="10dp"
+          android:layout_marginBottom="10dp"
           android:layout_width="0dp"
           android:layout_columnWeight="1"
           android:layout_height="wrap_content"/>
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
+          android:layout_width="0dp"
+          android:layout_columnWeight="1"
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/sMin"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/sMinInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/sMinDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
+          android:layout_width="0dp"
+          android:layout_columnWeight="1"
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/sMax"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/sMaxInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/sMaxDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
+          android:layout_width="0dp"
+          android:layout_columnWeight="1"
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/sDelta"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/sDeltaInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/sDeltaDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
+        <!-- .............................................................. -->
         <TextView
-          android:text="@string/Max"
-          android:gravity="center_horizontal"
+          android:text="@string/Value"
+          android:gravity="right"
+          android:layout_marginTop="10dp"
+          android:layout_marginBottom="10dp"
           android:layout_width="0dp"
           android:layout_columnWeight="1"
           android:layout_height="wrap_content"/>
-        <TextView
-          android:text="@string/Delta"
-          android:gravity="center_horizontal"
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
           android:layout_width="0dp"
           android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/sStart"
-          android:background="@android:color/white"
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/vMin"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/vMinInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/vMinDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
           android:layout_width="0dp"
           android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/sMin"
-          android:background="@android:color/white"
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/vMax"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/vMaxInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/vMaxDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+          android:orientation="horizontal"
+          android:layout_margin="10dp"
           android:layout_width="0dp"
           android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/sMax"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/sDelta"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-      </GridLayout>
-    </LinearLayout>
-    <LinearLayout
-      android:id="@+id/valuePanel"
-      android:visibility="gone"
-      android:orientation="vertical"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
-      <TextView
-        android:text="@string/Value"
-        android:gravity="center_horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp"/>
-      <GridLayout
-        android:gravity="center_horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:rowCount="2"
-        android:columnCount="4">
-        <TextView
-          android:text="@string/Start"
-          android:gravity="center_horizontal"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <TextView
-          android:text="@string/Min"
-          android:gravity="center_horizontal"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <TextView
-          android:text="@string/Max"
-          android:gravity="center_horizontal"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <TextView
-          android:text="@string/Delta"
-          android:gravity="center_horizontal"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/vStart"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/vMin"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/vMax"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
-        <NumberPicker
-          android:id="@+id/vDelta"
-          android:background="@android:color/white"
-          android:layout_width="0dp"
-          android:layout_columnWeight="1"
-          android:layout_height="wrap_content"/>
+          android:layout_height="wrap_content">
+          <EditText
+            android:id="@+id/vDelta"
+            android:inputType="numberDecimal"
+            android:gravity="right"
+            android:layout_marginRight="3dp"
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+          <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <Button
+              android:id="@+id/vDeltaInc"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/UpTriangle" />
+            <Button
+              android:id="@+id/vDeltaDec"
+              android:background="#ffa9a9a9"
+              android:textSize="10dp"
+              android:layout_width="20dp"
+              android:minWidth="20dp"
+              android:layout_height="0dp"
+              android:minHeight="0dp"
+              android:layout_weight="1"
+              android:text="@string/DownTriangle" />
+          </LinearLayout>
+        </LinearLayout>
       </GridLayout>
     </LinearLayout>
   </LinearLayout>
